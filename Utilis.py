@@ -6,6 +6,7 @@ import imageio
 import errno
 import numpy as np
 import tifffile as tiff
+from PIL import Image
 
 import torch.nn as nn
 import matplotlib.pyplot as plt
@@ -244,63 +245,63 @@ def evaluate_noisy_label_2(data, model1, model2, class_no):
     return test_dice / (i + 1), v_ged
 
 
-def evaluate_noisy_label_3(data, model1, class_no):
-    """
-
-    Args:
-        data:
-        model1:
-        class_no:
-
-    Returns:
-
-    """
-    model1.eval()
-    # model2.eval()
-    #
-    test_dice = 0
-    test_dice_all = []
-    #
-    for i, (v_images, v_labels_over, v_labels_under, v_labels_wrong, v_labels_good, v_imagename) in enumerate(data):
-        #
-        # print(i)
-        #
-        v_images = v_images.to(device='cuda', dtype=torch.float32)
-        v_outputs_logits, cms = model1(v_images)
-        b, c, h, w = v_outputs_logits.size()
-        v_outputs_logits = nn.Softmax(dim=1)(v_outputs_logits)
-        # cms = model2(v_images)
-        #
-        _, v_output = torch.max(v_outputs_logits, dim=1)
-        v_outputs_noisy = []
-        #
-        # v_outputs_logits = v_outputs_logits.permute(0, 2, 3, 1).contiguous()
-        # v_outputs_logits = v_outputs_logits.reshape(b * h * w, c, 1)
-        #
-        for cm in cms:
-            #
-            cm = cm.reshape(b * h * w, c, c)
-            cm = cm / cm.sum(1, keepdim=True)
-            v_noisy_output = torch.bmm(cm, v_outputs_logits.reshape(b * h * w, c, 1)).reshape(b, c, h, w)
-            # cm = cm.permute(0, 2, 3, 1).contiguous().view(b * h * w, c, c)
-            # cm = cm / cm.sum(1, keepdim=True)
-            # v_noisy_output = torch.bmm(cm, v_outputs_logits)
-            # v_noisy_output = v_noisy_output.view(b, h, w, c).permute(0, 3, 1, 2).contiguous()
-            _, v_noisy_output = torch.max(v_noisy_output, dim=1)
-            v_outputs_noisy.append(v_noisy_output.cpu().detach().numpy())
-        #
-        v_dice_ = segmentation_scores(v_labels_good, v_output.cpu().detach().numpy(), class_no)
-        #
-        epoch_noisy_labels = [v_labels_over.cpu().detach().numpy(), v_labels_under.cpu().detach().numpy(), v_labels_wrong.cpu().detach().numpy(), v_labels_good.cpu().detach().numpy()]
-        v_ged = generalized_energy_distance(epoch_noisy_labels, v_outputs_noisy, class_no)
-        test_dice += v_dice_
-        test_dice_all.append(test_dice)
-        #
-    # print(i)
-    # print(test_dice)
-    # print(test_dice / (i + 1))
-    #
-    return test_dice / (i + 1), v_ged
+# def evaluate_noisy_label_3(data, model1, class_no):
+#     """
+#
+#     Args:
+#         data:
+#         model1:
+#         class_no:
+#
+#     Returns:
+#
+#     """
+#     model1.eval()
+#     # model2.eval()
+#     #
+#     test_dice = 0
+#     test_dice_all = []
+#     #
+#     for i, (v_images, v_labels_over, v_labels_under, v_labels_wrong, v_labels_good, v_imagename) in enumerate(data):
+#         #
+#         # print(i)
+#         #
+#         v_images = v_images.to(device='cuda', dtype=torch.float32)
+#         v_outputs_logits, cms = model1(v_images)
+#         b, c, h, w = v_outputs_logits.size()
+#         v_outputs_logits = nn.Softmax(dim=1)(v_outputs_logits)
+#         # cms = model2(v_images)
+#         #
+#         _, v_output = torch.max(v_outputs_logits, dim=1)
+#         v_outputs_noisy = []
+#         #
+#         # v_outputs_logits = v_outputs_logits.permute(0, 2, 3, 1).contiguous()
+#         # v_outputs_logits = v_outputs_logits.reshape(b * h * w, c, 1)
+#         #
+#         for cm in cms:
+#             #
+#             cm = cm.reshape(b * h * w, c, c)
+#             cm = cm / cm.sum(1, keepdim=True)
+#             v_noisy_output = torch.bmm(cm, v_outputs_logits.reshape(b * h * w, c, 1)).reshape(b, c, h, w)
+#             # cm = cm.permute(0, 2, 3, 1).contiguous().view(b * h * w, c, c)
+#             # cm = cm / cm.sum(1, keepdim=True)
+#             # v_noisy_output = torch.bmm(cm, v_outputs_logits)
+#             # v_noisy_output = v_noisy_output.view(b, h, w, c).permute(0, 3, 1, 2).contiguous()
+#             _, v_noisy_output = torch.max(v_noisy_output, dim=1)
+#             v_outputs_noisy.append(v_noisy_output.cpu().detach().numpy())
+#         #
+#         v_dice_ = segmentation_scores(v_labels_good, v_output.cpu().detach().numpy(), class_no)
+#         #
+#         epoch_noisy_labels = [v_labels_over.cpu().detach().numpy(), v_labels_under.cpu().detach().numpy(), v_labels_wrong.cpu().detach().numpy(), v_labels_good.cpu().detach().numpy()]
+#         v_ged = generalized_energy_distance(epoch_noisy_labels, v_outputs_noisy, class_no)
+#         test_dice += v_dice_
+#         test_dice_all.append(test_dice)
+#         #
+#     # print(i)
+#     # print(test_dice)
+#     # print(test_dice / (i + 1))
+#     #
+#     return test_dice / (i + 1), v_ged
 
 
 def evaluate_noisy_label_4(data, model1, class_no):
@@ -754,7 +755,14 @@ class CustomDataset_punet(torch.utils.data.Dataset):
         #
         if noisylabel == 'multi':
             #
-            if dataset_tag == 'mnist':
+            # Kooshan - Start
+            if dataset_tag == 'test_kooshan':
+                self.label_1_folder = dataset_location + '/Annotator_4'
+                self.label_2_folder = dataset_location + '/Annotator_5'
+                self.label_3_folder = dataset_location + '/Annotator_6'
+                self.image_folder = dataset_location + '/Image'
+            # Kooshan - end
+            elif dataset_tag == 'mnist':
                 self.label_over_folder = dataset_location + '/Over'
                 self.label_under_folder = dataset_location + '/Under'
                 self.label_wrong_folder = dataset_location + '/Wrong'
@@ -796,6 +804,64 @@ class CustomDataset_punet(torch.utils.data.Dataset):
 
         if self.label_mode == 'multi':
             #
+            # Kooshan - Start
+            if self.dataset_tag == 'test_kooshan':
+                all_labels_1 = glob.glob(os.path.join(self.label_1_folder, '*.png'))
+                all_labels_1.sort()
+                all_labels_2 = glob.glob(os.path.join(self.label_2_folder, '*.png'))
+                all_labels_2.sort()
+                all_labels_3 = glob.glob(os.path.join(self.label_3_folder, '*.png'))
+                all_labels_3.sort()
+                all_images = glob.glob(os.path.join(self.image_folder, '*.png'))
+                all_images.sort()
+
+                # Load labels as grayscale (single channel)
+                label_1 = Image.open(all_labels_1[index]).convert('L')
+                label_1 = np.array(label_1, dtype='float32')
+                label_1 = np.where(label_1 > 0, 1, 0)  # Ensure binary
+
+                label_2 = Image.open(all_labels_2[index]).convert('L')
+                label_2 = np.array(label_2, dtype='float32')
+                label_2 = np.where(label_2 > 0, 1, 0)  # Ensure binary
+
+                label_3 = Image.open(all_labels_3[index]).convert('L')
+                label_3 = np.array(label_3, dtype='float32')
+                label_3 = np.where(label_3 > 0, 1, 0)  # Ensure binary
+
+                # Load images as RGB
+                image = Image.open(all_images[index]).convert('RGB')
+                image = np.array(image, dtype='float32')
+
+                # Reshaping to ensure the order: channel x height x width
+                if len(np.shape(label_1)) == 2:
+                    label_1 = np.expand_dims(label_1, axis=0)
+                    label_2 = np.expand_dims(label_2, axis=0)
+                    label_3 = np.expand_dims(label_3, axis=0)
+
+                # For images, move the color channel to the first dimension (channel, height, width)
+                if len(np.shape(image)) == 3:
+                    image = np.transpose(image, (2, 0, 1))
+
+                imagename = all_images[index]
+                path_image, imagename = os.path.split(imagename)
+                imagename, imageext = os.path.splitext(imagename)
+
+                if self.data_aug:
+                    augmentation = random.uniform(0, 1)
+                    if augmentation > 0.5:
+                        # Augmentation (e.g., flipping)
+                        for channel in range(image.shape[0]):
+                            image[channel, :, :] = np.flip(image[channel, :, :], axis=0).copy()
+                        label_1 = np.flip(label_1, axis=1).copy()
+                        label_1 = np.flip(label_1, axis=2).copy()
+                        label_2 = np.flip(label_2, axis=1).copy()
+                        label_2 = np.flip(label_2, axis=2).copy()
+                        label_3 = np.flip(label_3, axis=1).copy()
+                        label_3 = np.flip(label_3, axis=2).copy()
+
+                return image, label_1, label_2, label_3, imagename
+            # Kooshan - end
+
             if self.dataset_tag == 'mnist' or self.dataset_tag == 'brats':
                 #
                 all_labels_over = glob.glob(os.path.join(self.label_over_folder, '*.tif'))
@@ -1161,7 +1227,12 @@ class CustomDataset_punet(torch.utils.data.Dataset):
 
     def __len__(self):
         # You should change 0 to the total size of your dataset.
-        return len(glob.glob(os.path.join(self.image_folder, '*.tif')))
+        # Kooshan - Start - only modified by adding if statement and changing format
+        if self.dataset_tag == 'test_kooshan':
+            return len(glob.glob(os.path.join(self.image_folder, '*.png')))    # .tif
+        else:
+            return len(glob.glob(os.path.join(self.image_folder, '*.tif')))
+        # Kooshan - End -
 
 
 def truncated_normal_(tensor, mean=0, std=1):
@@ -1424,7 +1495,53 @@ def calculate_cm(pred, true):
 # Evaluation
 # ================================
 
+# # Kooshan - Start
+def evaluate_noisy_label_3(data, model1, class_no):
+    """
+    Args:
+        data:
+        model1:
+        class_no:
 
+    Returns:
+
+    """
+    model1.eval()
+    #
+    test_dice = 0
+    test_dice_all = []
+    #
+    for i, (v_images, v_labels_1, v_labels_2, v_labels_3, v_imagename) in enumerate(data):
+        #
+        v_images = v_images.to(device='cuda', dtype=torch.float32)
+        v_outputs_logits, cms = model1(v_images)
+        b, c, h, w = v_outputs_logits.size()
+        v_outputs_logits = nn.Softmax(dim=1)(v_outputs_logits)
+        #
+        _, v_output = torch.max(v_outputs_logits, dim=1)
+        v_outputs_noisy = []
+        #
+        v_outputs_logits = v_outputs_logits.view(b, c, h*w)
+        v_outputs_logits = v_outputs_logits.permute(0, 2, 1).contiguous().view(b*h*w, c)
+        v_outputs_logits = v_outputs_logits.view(b * h * w, c, 1)
+        #
+        for cm in cms:
+            cm = cm.reshape(b, c**2, h*w).permute(0, 2, 1).contiguous().view(b*h*w, c*c).view(b*h*w, c, c)
+            cm = cm / cm.sum(1, keepdim=True)
+            v_noisy_output = torch.bmm(cm, v_outputs_logits).view(b*h*w, c)
+            v_noisy_output = v_noisy_output.view(b, h*w, c).permute(0, 2, 1).contiguous().view(b, c, h, w)
+            _, v_noisy_output = torch.max(v_noisy_output, dim=1)
+            v_outputs_noisy.append(v_noisy_output.cpu().detach().numpy())
+        #
+        v_dice_ = segmentation_scores(v_labels_3, v_output.cpu().detach().numpy(), class_no)
+        #
+        epoch_noisy_labels = [v_labels_1.cpu().detach().numpy(), v_labels_2.cpu().detach().numpy(), v_labels_3.cpu().detach().numpy()]
+        v_ged = generalized_energy_distance(epoch_noisy_labels, v_outputs_noisy, class_no)
+        test_dice += v_dice_
+        test_dice_all.append(test_dice)
+        #
+    return test_dice / (i + 1), v_ged
+# Kooshan - End
 def evaluate_noisy_label_4(data, model1, class_no):
     """
 
