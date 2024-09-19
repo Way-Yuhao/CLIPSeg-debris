@@ -806,33 +806,37 @@ class CustomDataset_punet(torch.utils.data.Dataset):
             #
             # Kooshan - Start
             if self.dataset_tag == 'test_kooshan':
+                # Load label files for Kooshan's dataset
                 all_labels_1 = glob.glob(os.path.join(self.label_1_folder, '*.png'))
                 all_labels_1.sort()
                 all_labels_2 = glob.glob(os.path.join(self.label_2_folder, '*.png'))
                 all_labels_2.sort()
                 all_labels_3 = glob.glob(os.path.join(self.label_3_folder, '*.png'))
                 all_labels_3.sort()
+
                 all_images = glob.glob(os.path.join(self.image_folder, '*.png'))
                 all_images.sort()
 
-                # Load labels as grayscale (single channel)
+                # Load the labels as grayscale (single channel)
                 label_1 = Image.open(all_labels_1[index]).convert('L')
                 label_1 = np.array(label_1, dtype='float32')
-                label_1 = np.where(label_1 > 0, 1, 0)  # Ensure binary
 
                 label_2 = Image.open(all_labels_2[index]).convert('L')
                 label_2 = np.array(label_2, dtype='float32')
-                label_2 = np.where(label_2 > 0, 1, 0)  # Ensure binary
 
                 label_3 = Image.open(all_labels_3[index]).convert('L')
                 label_3 = np.array(label_3, dtype='float32')
-                label_3 = np.where(label_3 > 0, 1, 0)  # Ensure binary
+
+                # Ensure labels are binary
+                label_1 = np.where(label_1 > 0, 1, 0)
+                label_2 = np.where(label_2 > 0, 1, 0)
+                label_3 = np.where(label_3 > 0, 1, 0)
 
                 # Load images as RGB
                 image = Image.open(all_images[index]).convert('RGB')
                 image = np.array(image, dtype='float32')
 
-                # Reshaping to ensure the order: channel x height x width
+                # Adjust label shapes to ensure the correct order: channel x height x width
                 if len(np.shape(label_1)) == 2:
                     label_1 = np.expand_dims(label_1, axis=0)
                     label_2 = np.expand_dims(label_2, axis=0)
@@ -842,16 +846,22 @@ class CustomDataset_punet(torch.utils.data.Dataset):
                 if len(np.shape(image)) == 3:
                     image = np.transpose(image, (2, 0, 1))
 
+                # Process the image name similarly to the second code
                 imagename = all_images[index]
                 path_image, imagename = os.path.split(imagename)
                 imagename, imageext = os.path.splitext(imagename)
 
+                # Data augmentation (e.g., flipping)
                 if self.data_aug:
                     augmentation = random.uniform(0, 1)
                     if augmentation > 0.5:
-                        # Augmentation (e.g., flipping)
-                        for channel in range(image.shape[0]):
+                        # Augment the image and all labels (flipping in two axes)
+                        c, h, w = np.shape(image)
+                        for channel in range(c):
                             image[channel, :, :] = np.flip(image[channel, :, :], axis=0).copy()
+                            image[channel, :, :] = np.flip(image[channel, :, :], axis=1).copy()
+
+                        # Flip labels in both axes
                         label_1 = np.flip(label_1, axis=1).copy()
                         label_1 = np.flip(label_1, axis=2).copy()
                         label_2 = np.flip(label_2, axis=1).copy()
@@ -859,6 +869,7 @@ class CustomDataset_punet(torch.utils.data.Dataset):
                         label_3 = np.flip(label_3, axis=1).copy()
                         label_3 = np.flip(label_3, axis=2).copy()
 
+                # Return similar output as the second code
                 return image, label_1, label_2, label_3, imagename
             # Kooshan - end
 
