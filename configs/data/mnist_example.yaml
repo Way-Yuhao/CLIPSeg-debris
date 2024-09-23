@@ -9,6 +9,6 @@ dataset_tag: 'mnist'
 label_mode: 'multi'
 
 # full path to train/validate/test:
-test_path: ${data.dataset_path}/test
-train_path: ${data.dataset_path}/train
-validate_path: ${data.dataset_path}/validate
+test_path: ${data.data_path}/test
+train_path: ${data.data_path}/train
+validate_path: ${data.data_path}/validate

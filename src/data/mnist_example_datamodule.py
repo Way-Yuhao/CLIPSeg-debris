@@ -16,36 +16,31 @@ class MNISTExampleDataModule(LightningDataModule):
         super().__init__()
         self.save_hyperparameters(logger=False)
 
-    # def setup(self, stage: Optional[str] = None) -> None:
-    # train_dataset = CustomDataset_punet(dataset_location=self.hparams.train_path,
-    #                                     dataset_tag=self.hparams.dataset_tag, noisylabel=self.hparams.label_mode,
-    #                                     augmentation=True)
-    # validate_dataset = CustomDataset_punet(dataset_location=self.hparams.validate_path,
-    #                                        dataset_tag=self.hparams.dataset_tag,
-    #                                        noisylabel=self.hparams.label_mode, augmentation=False)
-    # test_dataset = CustomDataset_punet(dataset_location=self.hparams.test_path, dataset_tag=self.hparams.dataset_tag,
-    #                                    noisylabel=self.hparams.label_mode,
-    #                                    augmentation=False)
+        # to be defined elsewhere
+        self.train_dataset = None
+        self.validate_dataset = None
+        self.test_dataset = None
 
-    def train_dataloader(self) -> DataLoader[Any]:
-        train_dataset = CustomDataset_punet(dataset_location=self.hparams.train_path,
+    def setup(self, stage: Optional[str] = None) -> None:
+        self.train_dataset = CustomDataset_punet(dataset_location=self.hparams.train_path,
                                             dataset_tag=self.hparams.dataset_tag, noisylabel=self.hparams.label_mode,
                                             augmentation=True)
-        train_loader = DataLoader(train_dataset, batch_size=self.hparams.batch_size, shuffle=True,
+        self.validate_dataset = CustomDataset_punet(dataset_location=self.hparams.validate_path,
+                                               dataset_tag=self.hparams.dataset_tag,
+                                               noisylabel=self.hparams.label_mode, augmentation=False)
+        self.test_dataset = CustomDataset_punet(dataset_location=self.hparams.test_path, dataset_tag=self.hparams.dataset_tag,
+                                           noisylabel=self.hparams.label_mode,
+                                           augmentation=False)
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        train_loader = DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True,
                                   num_workers=self.hparams.num_workers, drop_last=True)
         return train_loader
 
     def val_dataloader(self) -> DataLoader[Any]:
-        validate_dataset = CustomDataset_punet(dataset_location=self.hparams.validate_path,
-                                               dataset_tag=self.hparams.dataset_tag,
-                                               noisylabel=self.hparams.label_mode, augmentation=False)
-        val_loader = DataLoader(validate_dataset, batch_size=1, shuffle=False, drop_last=False)
+        val_loader = DataLoader(self.validate_dataset, batch_size=1, shuffle=False, drop_last=False)
         return val_loader
 
     def test_dataloader(self) -> DataLoader[Any]:
-        test_dataset = CustomDataset_punet(dataset_location=self.hparams.test_path,
-                                           dataset_tag=self.hparams.dataset_tag,
-                                           noisylabel=self.hparams.label_mode,
-                                           augmentation=False)
-        test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, drop_last=False)
+        test_loader = DataLoader(self.test_dataset, batch_size=1, shuffle=False, drop_last=False)
         return test_loader

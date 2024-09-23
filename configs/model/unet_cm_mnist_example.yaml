@@ -6,6 +6,10 @@ optimizer:
   _target_: src.utils.multi_annotators_utils.adamW.AdamW
   _partial_: true
   lr: 1e-2 # learning rate
+  betas: [0.9, 0.999]
+  eps: 1e-8
+  weight_decay: 1e-5
+
 
 net:
   _target_: src.models.multi_annotators.models.UNet_CMs
@@ -13,3 +17,5 @@ net:
   width: 24 # width of the network
   depth: 3 # depth of the network, downsampling times is (depth-1)
   class_no: 2 # class number, 2 for binary
+  norm: 'in'
+  low_rank: false
