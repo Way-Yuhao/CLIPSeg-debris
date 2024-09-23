@@ -152,3 +152,4 @@ configs/local/default.yaml
 
 # Aim logging
 .aim
+/notebooks/.ipynb_checkpoints/
