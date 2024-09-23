@@ -88,6 +88,13 @@ class UNetCMsLitModule(LightningModule):
         _, train_output = torch.max(outputs_logits, dim=1)
         train_iou = segmentation_scores(labels_good.cpu().detach().numpy(), train_output.cpu().detach().numpy(),
                                         self.hparams.class_no)
+        self.log('train/loss', loss, on_epoch=True)
+        self.log('train/loss_ce', loss_ce, on_epoch=True)
+        self.log('train/loss_trace', loss_trace, on_epoch=True)
+        self.log('train/iou', train_iou, on_epoch=True)
+
+
+    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
 
     def forward(self, x: torch.Tensor) -> Any:
         return self.net(x)
