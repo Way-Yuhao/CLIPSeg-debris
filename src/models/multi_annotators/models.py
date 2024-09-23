@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.utils.multi_annotators_utils.Utilis import init_weights, init_weights_orthogonal_normal, l2_regularisation
+from src.utils.multi_annotators_utils.utilis import init_weights, init_weights_orthogonal_normal, l2_regularisation
 from torch.distributions import Normal, Independent, kl
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

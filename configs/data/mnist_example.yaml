@@ -1,0 +1,14 @@
+_target_: src.data.mnist_example_datamodule.MNISTExampleDataModule
+
+batch_size: 5
+num_workers: 2
+
+# Change path for your own datasets here:
+data_path: './data/MNIST_examples'
+dataset_tag: 'mnist'
+label_mode: 'multi'
+
+# full path to train/validate/test:
+test_path: ${data.dataset_path}/test
+train_path: ${data.dataset_path}/train
+validate_path: ${data.dataset_path}/validate

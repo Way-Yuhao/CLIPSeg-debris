@@ -10,15 +10,15 @@ import matplotlib.pyplot as plt
 import torch.functional as F
 from torch.utils import data
 
-from Utilis import segmentation_scores, generalized_energy_distance
+from utilis import segmentation_scores, generalized_energy_distance
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
-from Utilis import CustomDataset_punet, calculate_cm
-from Loss import noisy_label_loss_low_rank, noisy_label_loss
+from utilis import CustomDataset_punet, calculate_cm
+from loss import noisy_label_loss_low_rank, noisy_label_loss
 from Models import UNet_CMs
 
-from Utilis import evaluate_noisy_label_4, evaluate_noisy_label_5, evaluate_noisy_label_6
+from utilis import evaluate_noisy_label_4, evaluate_noisy_label_5, evaluate_noisy_label_6
 
 
 def segmentation(model_name, model_path, testdata, class_no, data_set):

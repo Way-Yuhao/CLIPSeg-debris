@@ -1,0 +1,15 @@
+_target_: src.models.multi_annotators.lit_modules.UNetCMsLitModule
+
+alpha: 0.001 # weight of the trace regularisation of learnt confusion matrices
+
+optimizer:
+  _target_: src.utils.multi_annotators_utils.adamW.AdamW
+  _partial_: true
+  lr: 1e-2 # learning rate
+
+net:
+  _target_: src.models.multi_annotators.models.UNet_CMs
+  in_ch: 3 # dimension of input (aka. input_dim)
+  width: 24 # width of the network
+  depth: 3 # depth of the network, downsampling times is (depth-1)
+  class_no: 2 # class number, 2 for binary

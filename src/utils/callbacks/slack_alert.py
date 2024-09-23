@@ -1,9 +1,15 @@
+import os
+import io
 import traceback
+import contextlib
 import socket
+import requests
+from functools import wraps
 from datetime import datetime
+from dotenv import load_dotenv
 from lightning.pytorch.callbacks import RichProgressBar, Callback
-from src.utils.helper import alert, monitor, monitor_complete
 
+slack_alert_msg_printed = False
 
 class SlackAlert(Callback):
     """
@@ -52,3 +58,127 @@ class SlackAlert(Callback):
             message = f'*{title}*\n```Time completed: {formatted_time}\nHostname: {self.hostname}\nDevice: {device}```'
             alert(message)
         return
+
+
+def alert(message):
+    """
+    Sends a message to a designated slack channel, which a SLACK_WEBHOOK_URL to be set in .env file.
+    If webhook URL is not found, the message is printed to stdout in red.
+    :param message:
+    :return:
+    """
+    global slack_alert_msg_printed  # print out error msg only once
+    path_to_restore = os.getcwd()
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    load_dotenv('.env')
+    os.chdir(path_to_restore)
+    webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+    if webhook_url is None:
+        if not slack_alert_msg_printed:
+            msg = 'To send alerts to slack, set SLACK_WEBHOOK_URL in .env file under project root directory.'
+            yprint(msg)  # Assuming yprint is a typo and meant print. Adjust as necessary for your logging method.
+            yprint('Message routed to stdout')
+            slack_alert_msg_printed = True  # Mark the warning as printed
+        rprint(message)
+        return
+    else:
+        data = {'text': message,
+                'username': 'Webhook Alert',
+                'icon_emoji': ':robot_face:'}
+        response = requests.post(webhook_url, json=data)
+        if response.status_code != 200:
+            raise ValueError(
+                'Request to slack returned an error %s, the response is:\n%s'
+                % (response.status_code, response.text)
+            )
+        return
+
+
+def monitor(func):
+    """
+    Decorator to monitor the execution of a function. If the function fails, the stack trace is printed.
+    No message is sent at completion.
+    :param func:
+    :return:
+    """
+    def inner(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except Exception as e:
+            stack_trace = traceback.format_exc()
+            title = 'Code failed'
+            alert(f'*{title}*```{stack_trace}```')
+            raise e
+    return inner
+
+
+def monitor_complete(func):
+    """
+    Decorator to monitor the execution of a function. If the function fails, the stack trace is printed.
+    If the function succeeds, a message is sent to a designated slack channel.
+    :param func:
+    :return:
+    """
+    def inner(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+            alert(f'Code executed successfully: {func.__name__}')
+        except Exception as e:
+            stack_trace = traceback.format_exc()
+            title = 'Code failed'
+            alert(f'*{title}*```{stack_trace}```')
+            raise e
+    return inner
+
+
+def capture_stdout(func):
+    """
+    Suppresses stdout output, unless it contains an error message, in which case a ValueError is raised.
+    :param func:
+    :return:
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Create a StringIO buffer to capture output
+        stdout_capture = io.StringIO()
+        with contextlib.redirect_stdout(stdout_capture):
+            # Call the original function and capture its return value
+            retval = func(*args, **kwargs)
+        # Retrieve the captured output
+        std_output = stdout_capture.getvalue()
+        if ('error' in std_output.lower() or 'warning' in std_output.lower()
+                or 'failed' in std_output.lower() or 'exception' in std_output.lower()):
+            raise ValueError(f'Found error in suppressed stdout from {func.__name__}\n{std_output}')
+        # Return both the function's original return value and the captured output
+        return retval
+    return wrapper
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def yprint(msg):
+    """
+    Print to stdout console in yellow.
+    :param msg:
+    :return:
+    """
+    print(f"{bcolors.WARNING}{msg}{bcolors.ENDC}")
+
+
+def rprint(msg):
+    """
+    Print to stdout console in red.
+    :param msg:
+    :return:
+    """
+    print(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
