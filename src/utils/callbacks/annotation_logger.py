@@ -26,18 +26,25 @@ class AnnotationLogger(Callback):
 
         self.results_dir = os.path.join(self.save_dir, 'results')
 
+        # to be defined later
+        self.labeler_tags = None
+        self.num_labelers = None
+
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
         os.makedirs(self.results_dir, exist_ok=True)
+        self.labeler_tags = trainer.datamodule.labeler_tags
+        self.num_labelers = len(self.labeler_tags)
 
     def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self.demonstrate_data(trainer)
 
-    def on_fit_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        pass
-
     def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
                           batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         self.save_prediction(outputs, 'test', batch_idx)
+        return
+
+    def on_test_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self.log_prediction(self.test_idx)
         return
 
     def demonstrate_data(self, trainer: "pl.trianer"):
@@ -95,59 +102,56 @@ class AnnotationLogger(Callback):
         for k, v in outputs.items():
             plt.imsave(os.path.join(self.results_dir, f'{phase}_{idx}_{k}.png'), v, cmap='gray')
 
-    def log_prediction(self):
+    def log_prediction(self, test_data_index: int):
         """
         Plot image, ground truth, and final segmentation
         """
-        fig = plt.figure(figsize=(6.7, 13))
-        columns = 3
-        rows = 1
+        n = self.num_labelers
+        title_font_size =20
 
-        ax = []
-        imgs = [img, label, seg]
-        imgs_names = ['Test img', 'GroundTruth', 'Pred of true seg']
+        # File paths
+        img_path = os.path.join(self.results_dir, f'test_{test_data_index}_img.png')
+        label_path = os.path.join(self.results_dir, f'test_{test_data_index}_label.png')
+        seg_path = os.path.join(self.results_dir, f'test_{test_data_index}_seg.png')
 
-        for i in range(columns * rows):
-            img_ = imgs[i]
-            ax.append(fig.add_subplot(rows, columns, i + 1))
-            ax[-1].set_title(imgs_names[i])
-            img_ = Image.open(img_)
-            img_ = np.array(img_, dtype='uint8')
-            plt.imshow(img_, cmap='gray')
+        # Row 1: Input, Ground Truth, and Consensus Prediction
+        fig, ax = plt.subplots(2, max(3, n), figsize=(4 * max(3, n), 8))
+        row1_imgs = [img_path, label_path, seg_path]
+        row1_titles = ['Input Image', 'Ground Truth', 'Prediction of Consensus']
 
-        # Log the first set of images to wandb
-        log_plot_to_wandb(fig, "test_results/main_comparison")
+        for i, (img_path, title) in enumerate(zip(row1_imgs, row1_titles)):
+            img = Image.open(img_path)
+            ax[0, i].imshow(np.array(img), cmap='gray')
+            ax[0, i].set_title(title, fontsize=title_font_size)
+            ax[0, i].axis('off')
 
-        # Plot the segmentation for noisy labels:
-        fig = plt.figure(figsize=(9, 13))
-        columns = 4
-        rows = 1
+        ax[0, 3].axis('off')
 
-        ax = []
-        noisy_segs = [over_seg, under_seg, wrong_seg, good_seg]
-        noisy_segs_names = ['Pred of over', 'Pred of under', 'Pred of wrong', 'Pred of good']
+        # Row 2: Noisy Predictions
+        for i in range(n):
+            noisy_seg_path = os.path.join(self.results_dir, f'test_{test_data_index}_noisy_{i}_seg.png')
+            img = Image.open(noisy_seg_path)
+            ax[1, i].imshow(np.array(img), cmap='gray')
+            if self.labeler_tags is not None:
+                ax[1, i].set_title(f'Prediction of {self.labeler_tags[i]}', fontsize=title_font_size)
+            else:
+                ax[1, i].set_title(f'Prediction of {i}', fontsize=title_font_size)
+            ax[1, i].axis('off')
 
-        for i in range(columns * rows):
-            noisy_seg_ = noisy_segs[i]
-            ax.append(fig.add_subplot(rows, columns, i + 1))
-            ax[-1].set_title(noisy_segs_names[i])
-            noisy_seg_ = Image.open(noisy_seg_)
-            noisy_seg_ = np.array(noisy_seg_, dtype='uint8')
-            plt.imshow(noisy_seg_, cmap='gray')
+        # Remove empty subplots if n < 3
+        if n < 3:
+            for i in range(n, 3):
+                ax[0, i].axis('off')
+            for i in range(n, max(3, n)):
+                ax[1, i].axis('off')
 
-        # Log the noisy segmentation results to wandb
-        log_plot_to_wandb(fig, "test_results/noisy_label_predictions")
-
-
-    @staticmethod
-    def log_plot_to_wandb(fig, log_name):
-        """Function to save plot to a BytesIO object for logging in wandb"""
+        # Log the figure to wandb
         buf = io.BytesIO()
+        plt.tight_layout()
         plt.savefig(buf, format='png', bbox_inches='tight')
         buf.seek(0)
         image = Image.open(buf)
-        wandb.log({log_name: wandb.Image(image)})
+        wandb.log({"test/test_results": wandb.Image(image, caption=f'Test {test_data_index} Results')})
         buf.close()
         plt.close(fig)
-        return
 

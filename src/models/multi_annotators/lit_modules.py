@@ -115,9 +115,9 @@ class UNetCMsLitModule(LightningModule):
         # plt.imsave(save_name, v_outputs_logits.reshape(h, w).cpu().detach().numpy(), cmap='gray')
         # plt.imsave(save_name_label, labels_good.reshape(h, w).cpu().detach().numpy(), cmap='gray')
 
-        step_output = {'seg': v_images[:, 1, :, :].reshape(h, w).cpu().detach().numpy(),
-                       'label': v_outputs_logits.reshape(h, w).cpu().detach().numpy(),
-                       'img': labels_good.reshape(h, w).cpu().detach().numpy()}
+        step_output = {'img': v_images[:, 1, :, :].reshape(h, w).cpu().detach().numpy(),
+                       'seg': v_outputs_logits.reshape(h, w).cpu().detach().numpy(),
+                       'label': labels_good.reshape(h, w).cpu().detach().numpy()}
         # plot the noisy segmentation maps:
         v_outputs_logits_original = v_outputs_logits_original.reshape(b, c, h * w)
         v_outputs_logits_original = v_outputs_logits_original.permute(0, 2, 1).contiguous()

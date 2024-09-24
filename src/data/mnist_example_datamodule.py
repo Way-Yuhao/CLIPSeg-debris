@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 import torch
 from lightning import LightningDataModule
 from lightning.pytorch.utilities.types import EVAL_DATALOADERS
@@ -12,9 +12,12 @@ __author__ = 'Yuhao Liu'
 
 class MNISTExampleDataModule(LightningDataModule):
 
-    def __init__(self, *args, **wkargs):
+    def __init__(self, labeler_tags: List[str], *args, **kwargs):
         super().__init__()
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=("labeler_tags",))
+
+        self.labeler_tags = labeler_tags
+        self.num_labelers = len(labeler_tags)
 
         # to be defined elsewhere
         self.train_dataset = None

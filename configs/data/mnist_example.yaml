@@ -8,6 +8,8 @@ data_path: './data/MNIST_examples'
 dataset_tag: 'mnist'
 label_mode: 'multi'
 
+labeler_tags: ['over', 'under', 'wrong', 'good']
+
 # full path to train/validate/test:
 test_path: ${data.data_path}/test
 train_path: ${data.data_path}/train
