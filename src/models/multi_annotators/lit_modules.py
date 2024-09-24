@@ -128,7 +128,10 @@ class UNetCMsLitModule(LightningModule):
             v_noisy_output_original = v_noisy_output_original.view(b, h * w, c).permute(0, 2, 1).contiguous().view(b, c,
                                                                                                                    h, w)
             _, v_noisy_output = torch.max(v_noisy_output_original, dim=1)
+
+
             step_output[f'noisy_{j}_seg'] = v_noisy_output.reshape(h, w).cpu().detach().numpy()
+            step_output[f'{j}_label'] = batch[j+1].reshape(h, w).cpu().detach().numpy()
             # save_name = save_path_visual_result + '/test_' + str(i) + '_noisy_' + str(j) + '_seg.png'
             # plt.imsave(save_name, v_noisy_output.reshape(h, w).cpu().detach().numpy(), cmap='gray')
         return step_output

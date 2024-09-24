@@ -43,10 +43,13 @@ class AnnotationLogger(Callback):
     def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
                           batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         self.save_prediction(outputs, 'test', batch_idx)
+        if batch_idx == self.test_idx:
+            self.save_prediction_composite(outputs, 'test', batch_idx)
         return
 
     def on_test_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        self.log_prediction(self.test_idx)
+        # self.log_prediction_from_disk(self.test_idx)
+        pass
         return
 
     def demonstrate_data(self, trainer: "pl.trianer"):
@@ -100,11 +103,71 @@ class AnnotationLogger(Callback):
         plt.close(fig)
         return
 
-    def save_prediction(self, outputs: dict[str, np.ndarray], phase: str, idx: int):
+    def save_prediction(self, outputs: Dict[str, np.ndarray], phase: str, idx: int):
         for k, v in outputs.items():
             plt.imsave(os.path.join(self.results_dir, f'{phase}_{idx}_{k}.png'), v, cmap='gray')
 
-    def log_prediction(self, test_data_index: int):
+
+    def save_prediction_composite(self, outputs: Dict, phase: str, idx: int):
+        n = self.num_labelers
+        title_font_size = 20
+
+        # Row 1: Input, Ground Truth, and Consensus Prediction
+        fig, ax = plt.subplots(3, max(3, n), figsize=(4 * max(3, n), 12))
+        row1_imgs_keys = ['img', 'label', 'seg']
+        row1_titles = ['Input Image', 'Ground Truth', 'Prediction of Consensus']
+
+        for i, (k, title) in enumerate(zip(row1_imgs_keys, row1_titles)):
+            img = outputs[k]
+            ax[0, i].imshow(np.array(img), cmap='gray')
+            ax[0, i].set_title(title, fontsize=title_font_size)
+            ax[0, i].axis('off')
+
+        ax[0, 3].axis('off')
+
+        # Row 2: Predictions
+        for i in range(n):
+            img = outputs[f'noisy_{i}_seg']
+            ax[1, i].imshow(np.array(img), cmap='gray')
+            if self.labeler_tags is not None:
+                ax[1, i].set_title(f'Prediction of {self.labeler_tags[i]}', fontsize=title_font_size)
+            else:
+                ax[1, i].set_title(f'Prediction of {i}', fontsize=title_font_size)
+            ax[1, i].axis('off')
+
+        # Row 3: Labels of each annotator
+        for i in range(n):
+            img = outputs[f'{i}_label']
+            ax[2, i].imshow(np.array(img), cmap='gray')
+            if self.labeler_tags is not None:
+                ax[2, i].set_title(f'Label of {self.labeler_tags[i]}', fontsize=title_font_size)
+            else:
+                ax[2, i].set_title(f'Label of {i}', fontsize=title_font_size)
+            ax[2, i].axis('off')
+
+        # Remove empty subplots if n < 3
+        if n < 3:
+            for i in range(n, 3):
+                ax[0, i].axis('off')
+            for i in range(n, max(3, n)):
+                ax[1, i].axis('off')
+
+
+
+
+        # Log the figure to wandb
+        buf = io.BytesIO()
+        plt.tight_layout()
+        plt.savefig(buf, format='png', bbox_inches='tight')
+        plt.savefig(os.path.join(self.composite_results_dir, f'{phase}_{idx}_results.png'),
+                    format='png', bbox_inches='tight')
+        buf.seek(0)
+        image = Image.open(buf)
+        wandb.log({f"{phase}/results": wandb.Image(image, caption=f'{phase} {idx} Results')})
+        buf.close()
+        plt.close(fig)
+
+    def log_prediction_from_disk(self, test_data_index: int):
         """
         Plot image, ground truth, and final segmentation
         """

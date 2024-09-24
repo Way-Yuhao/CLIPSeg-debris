@@ -388,7 +388,8 @@ def main_loop(data_folder, lgg_amount, hgg_amount, new_size, tag_class):
 if __name__ == '__main__':
     # data_folder = '/cluster/project0/BRATS_2018_AuxiliaryNetwork/BRATS/MICCAI_BraTS_2018_Data_Training'
     # data_folder = '/home/moucheng/projects_data/Brain_data/BRATS2018/MICCAI_BraTS_2018_Data_Training'
-    data_folder = '/home/moucheng/projects_data/Brain_data/BRATS2018/MICCAI_BraTS_2018_Data_Training'
+    # data_folder = '/home/moucheng/projects_data/Brain_data/BRATS2018/MICCAI_BraTS_2018_Data_Training'
+    data_folder = '/home/yuhaoliu/Data/Multi-Annotator/MICCAI_BraTS_2019_Data_Training'
     # hgg cases: 210 in total
     # lgg cases: 76 in total
     # original resolution: 240 x 240

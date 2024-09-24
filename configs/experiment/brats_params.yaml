@@ -1,0 +1,17 @@
+# @package _global_
+
+logger:
+  wandb:
+    name: 'debug'
+    notes: null
+
+#model:
+#  alpha: 1.5
+#  unet:
+#    width: 16 # width of the network
+#    depth: 4 # depth of the network, downsampling times is (depth-1)
+  optimizer:
+    lr: 5e-3 # learning rate
+
+trainer:
+  max_epochs: 1
