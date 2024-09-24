@@ -61,6 +61,8 @@ class UNetCMsLitModule(LightningModule):
         self.log('train/regularization', loss_trace, on_epoch=True, on_step=False)
         self.log('train/iou', train_iou, on_epoch=True, on_step=False)
 
+        return loss
+
     # def on_validation_epoch_start(self) -> None:
     #     self.test_dice = 0
     #     self.test_dice_all = []
