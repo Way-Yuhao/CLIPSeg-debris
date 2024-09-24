@@ -2,8 +2,8 @@
 
 logger:
   wandb:
-    name: 'debug'
-    notes: null
+    name: 'lr=5e-3'
+    notes: "logging all outputs"
 
 #model:
 #  alpha: 1.5
@@ -14,4 +14,4 @@ logger:
     lr: 5e-3 # learning rate
 
 trainer:
-  max_epochs: 1
+  max_epochs: 50
