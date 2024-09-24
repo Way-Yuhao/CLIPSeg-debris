@@ -11,13 +11,13 @@ model_checkpoint:
   dirpath: ${paths.output_dir}/checkpoints
   filename: "epoch_{epoch:03d}"
   monitor: "val/dice"
-  mode: "min"
+  mode: "max"
   save_last: True
   auto_insert_metric_name: False
 
 #early_stopping:
-#  monitor: "val/acc"
-#  patience: 100
+#  monitor: "val/dice"
+#  patience: 50
 #  mode: "max"
 
 model_summary:

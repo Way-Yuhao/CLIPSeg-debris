@@ -63,10 +63,6 @@ class UNetCMsLitModule(LightningModule):
 
         return loss
 
-    # def on_validation_epoch_start(self) -> None:
-    #     self.test_dice = 0
-    #     self.test_dice_all = []
-
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         # unpack the batch
         v_images, v_labels_over, v_labels_under, v_labels_wrong, v_labels_good, v_imagename = batch
