@@ -11,6 +11,7 @@ from src.utils.multi_annotators_utils.utilis import segmentation_scores, general
 
 __author__ = 'Yuhao Liu'
 
+
 class UNetCMsLitModule(LightningModule):
 
     def __init__(self, net: torch.nn.Module, *args, **kwargs):
@@ -24,49 +25,11 @@ class UNetCMsLitModule(LightningModule):
         self.test_dice = None
         self.test_dice_all = None
 
-
     def configure_optimizers(self) -> Dict[str, Any]:
         optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
         # if self.hparams.scheduler is not None:
         #     raise NotImplementedError("Scheduler is not implemented yet.")
         return {"optimizer": optimizer}
-
-
-    def on_fit_start(self) -> None:
-        """demonstrate the training samples"""
-        Image_index_to_demonstrate = 6
-        (images, labels_over, labels_under,
-         labels_wrong, labels_good, imagename) = self.trainer.datamodule.validate_dataset[Image_index_to_demonstrate]
-        images = np.mean(images, axis=0)
-
-        # plot the labels:
-        fig = plt.figure(figsize=(9, 13))
-        columns = 5
-        rows = 1
-        ax = []
-        labels = []
-        labels_names = []
-        labels.append(images)
-        labels.append(labels_over)
-        labels.append(labels_under)
-        labels.append(labels_wrong)
-        labels.append(labels_good)
-        labels_names.append('Input')
-        labels_names.append('Over label')
-        labels_names.append('Under label')
-        labels_names.append('Wrong label')
-        labels_names.append('Good label')
-
-        for i in range(columns * rows):
-            if i != 0:
-                label_ = labels[i][0, :, :]
-            else:
-                label_ = labels[i]
-            ax.append(fig.add_subplot(rows, columns, i + 1))
-            ax[-1].set_title(labels_names[i])
-            plt.imshow(label_, cmap='gray')
-        plt.show()
-        pass
 
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> STEP_OUTPUT:
         # unpack the batch
@@ -124,7 +87,8 @@ class UNetCMsLitModule(LightningModule):
             _, v_noisy_output = torch.max(v_noisy_output, dim=1)
             v_outputs_noisy.append(v_noisy_output.cpu().detach().numpy())
 
-        v_dice = segmentation_scores(v_labels_good.cpu().detach(), v_output.cpu().detach().numpy(), self.hparams.class_no)
+        v_dice = segmentation_scores(v_labels_good.cpu().detach(), v_output.cpu().detach().numpy(),
+                                     self.hparams.class_no)
 
         epoch_noisy_labels = [v_labels_over.cpu().detach().numpy(), v_labels_under.cpu().detach().numpy(),
                               v_labels_wrong.cpu().detach().numpy(), v_labels_good.cpu().detach().numpy()]
@@ -134,6 +98,42 @@ class UNetCMsLitModule(LightningModule):
         self.log('val/ged', v_ged, on_epoch=True)
         return
 
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> dict:
+        # unpack the batch
+        v_images, labels_over, labels_under, labels_wrong, labels_good, imagename = batch
+        v_outputs_logits_original, v_outputs_logits_noisy = self.forward(v_images)
+        b, c, h, w = v_outputs_logits_original.size()
+        # plot the final segmentation map
+        v_outputs_logits_original = Softmax(dim=1)(v_outputs_logits_original)
+        _, v_outputs_logits = torch.max(v_outputs_logits_original, dim=1)
+
+        # save_name = save_path_visual_result + '/test_' + str(i) + '_seg.png'
+        # save_name_label = save_path_visual_result + '/test_' + str(i) + '_label.png'
+        # save_name_slice = save_path_visual_result + '/test_' + str(i) + '_img.png'
+
+        # plt.imsave(save_name_slice, v_images[:, 1, :, :].reshape(h, w).cpu().detach().numpy(), cmap='gray')
+        # plt.imsave(save_name, v_outputs_logits.reshape(h, w).cpu().detach().numpy(), cmap='gray')
+        # plt.imsave(save_name_label, labels_good.reshape(h, w).cpu().detach().numpy(), cmap='gray')
+
+        step_output = {'seg': v_images[:, 1, :, :].reshape(h, w).cpu().detach().numpy(),
+                       'label': v_outputs_logits.reshape(h, w).cpu().detach().numpy(),
+                       'img': labels_good.reshape(h, w).cpu().detach().numpy()}
+        # plot the noisy segmentation maps:
+        v_outputs_logits_original = v_outputs_logits_original.reshape(b, c, h * w)
+        v_outputs_logits_original = v_outputs_logits_original.permute(0, 2, 1).contiguous()
+        v_outputs_logits_original = v_outputs_logits_original.view(b * h * w, c).view(b * h * w, c, 1)
+
+        for j, cm in enumerate(v_outputs_logits_noisy):
+            cm = cm.view(b, c ** 2, h * w).permute(0, 2, 1).contiguous().view(b * h * w, c * c).view(b * h * w, c, c)
+            cm = cm / cm.sum(1, keepdim=True)
+            v_noisy_output_original = torch.bmm(cm, v_outputs_logits_original).view(b * h * w, c)
+            v_noisy_output_original = v_noisy_output_original.view(b, h * w, c).permute(0, 2, 1).contiguous().view(b, c,
+                                                                                                                   h, w)
+            _, v_noisy_output = torch.max(v_noisy_output_original, dim=1)
+            step_output[f'noisy_{j}_seg'] = v_noisy_output.reshape(h, w).cpu().detach().numpy()
+            # save_name = save_path_visual_result + '/test_' + str(i) + '_noisy_' + str(j) + '_seg.png'
+            # plt.imsave(save_name, v_noisy_output.reshape(h, w).cpu().detach().numpy(), cmap='gray')
+        return step_output
 
     def forward(self, x: torch.Tensor) -> Any:
         return self.net(x)
