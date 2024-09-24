@@ -43,8 +43,8 @@ class AnnotationLogger(Callback):
     def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
                           batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         self.save_prediction(outputs, 'test', batch_idx)
-        if batch_idx == self.test_idx:
-            self.save_prediction_composite(outputs, 'test', batch_idx)
+        log_wandb = True if batch_idx == self.test_idx else False
+        self.save_prediction_composite(outputs, 'test', batch_idx, log_wandb)
         return
 
     def on_test_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
@@ -108,7 +108,7 @@ class AnnotationLogger(Callback):
             plt.imsave(os.path.join(self.results_dir, f'{phase}_{idx}_{k}.png'), v, cmap='gray')
 
 
-    def save_prediction_composite(self, outputs: Dict, phase: str, idx: int):
+    def save_prediction_composite(self, outputs: Dict, phase: str, idx: int, log_wandb: bool):
         n = self.num_labelers
         title_font_size = 20
 
@@ -151,9 +151,7 @@ class AnnotationLogger(Callback):
                 ax[0, i].axis('off')
             for i in range(n, max(3, n)):
                 ax[1, i].axis('off')
-
-
-
+                ax[2, i].axis('off')
 
         # Log the figure to wandb
         buf = io.BytesIO()
@@ -163,7 +161,8 @@ class AnnotationLogger(Callback):
                     format='png', bbox_inches='tight')
         buf.seek(0)
         image = Image.open(buf)
-        wandb.log({f"{phase}/results": wandb.Image(image, caption=f'{phase} {idx} Results')})
+        if log_wandb:
+            wandb.log({f"{phase}/results": wandb.Image(image, caption=f'{phase} {idx} Results')})
         buf.close()
         plt.close(fig)
 
