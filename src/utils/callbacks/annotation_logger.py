@@ -25,6 +25,7 @@ class AnnotationLogger(Callback):
         self.test_idx = 15
 
         self.results_dir = os.path.join(self.save_dir, 'results')
+        self.composite_results_dir = os.path.join(self.save_dir, 'composite_results')
 
         # to be defined later
         self.labeler_tags = None
@@ -32,6 +33,7 @@ class AnnotationLogger(Callback):
 
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
         os.makedirs(self.results_dir, exist_ok=True)
+        os.makedirs(self.composite_results_dir, exist_ok=True)
         self.labeler_tags = trainer.datamodule.labeler_tags
         self.num_labelers = len(self.labeler_tags)
 
@@ -149,6 +151,8 @@ class AnnotationLogger(Callback):
         buf = io.BytesIO()
         plt.tight_layout()
         plt.savefig(buf, format='png', bbox_inches='tight')
+        plt.savefig(os.path.join(self.composite_results_dir, f'test_{test_data_index}_results.png'),
+                    format='png', bbox_inches='tight')
         buf.seek(0)
         image = Image.open(buf)
         wandb.log({"test/test_results": wandb.Image(image, caption=f'Test {test_data_index} Results')})
