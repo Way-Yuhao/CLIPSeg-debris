@@ -95,58 +95,59 @@ class AnnotationLogger(Callback):
         for k, v in outputs.items():
             plt.imsave(os.path.join(self.results_dir, f'{phase}_{idx}_{k}.png'), v, cmap='gray')
 
+    def log_prediction(self):
+        """
+        Plot image, ground truth, and final segmentation
+        """
+        fig = plt.figure(figsize=(6.7, 13))
+        columns = 3
+        rows = 1
 
-    # def log_prediction(self):
-    #     # Plot image, ground truth, and final segmentation
-    #     fig = plt.figure(figsize=(6.7, 13))
-    #     columns = 3
-    #     rows = 1
-    #
-    #     ax = []
-    #     imgs = [img, label, seg]
-    #     imgs_names = ['Test img', 'GroundTruth', 'Pred of true seg']
-    #
-    #     for i in range(columns * rows):
-    #         img_ = imgs[i]
-    #         ax.append(fig.add_subplot(rows, columns, i + 1))
-    #         ax[-1].set_title(imgs_names[i])
-    #         img_ = Image.open(img_)
-    #         img_ = np.array(img_, dtype='uint8')
-    #         plt.imshow(img_, cmap='gray')
-    #
-    #     # Log the first set of images to wandb
-    #     log_plot_to_wandb(fig, "test_results/main_comparison")
-    #
-    #     # Plot the segmentation for noisy labels:
-    #     fig = plt.figure(figsize=(9, 13))
-    #     columns = 4
-    #     rows = 1
-    #
-    #     ax = []
-    #     noisy_segs = [over_seg, under_seg, wrong_seg, good_seg]
-    #     noisy_segs_names = ['Pred of over', 'Pred of under', 'Pred of wrong', 'Pred of good']
-    #
-    #     for i in range(columns * rows):
-    #         noisy_seg_ = noisy_segs[i]
-    #         ax.append(fig.add_subplot(rows, columns, i + 1))
-    #         ax[-1].set_title(noisy_segs_names[i])
-    #         noisy_seg_ = Image.open(noisy_seg_)
-    #         noisy_seg_ = np.array(noisy_seg_, dtype='uint8')
-    #         plt.imshow(noisy_seg_, cmap='gray')
-    #
-    #     # Log the noisy segmentation results to wandb
-    #     log_plot_to_wandb(fig, "test_results/noisy_label_predictions")
-    #
-    #
-    # @staticmethod
-    # def log_plot_to_wandb(fig, log_name):
-    #     """Function to save plot to a BytesIO object for logging in wandb"""
-    #     buf = io.BytesIO()
-    #     plt.savefig(buf, format='png', bbox_inches='tight')
-    #     buf.seek(0)
-    #     image = Image.open(buf)
-    #     wandb.log({log_name: wandb.Image(image)})
-    #     buf.close()
-    #     plt.close(fig)
-    #     return
-    #
+        ax = []
+        imgs = [img, label, seg]
+        imgs_names = ['Test img', 'GroundTruth', 'Pred of true seg']
+
+        for i in range(columns * rows):
+            img_ = imgs[i]
+            ax.append(fig.add_subplot(rows, columns, i + 1))
+            ax[-1].set_title(imgs_names[i])
+            img_ = Image.open(img_)
+            img_ = np.array(img_, dtype='uint8')
+            plt.imshow(img_, cmap='gray')
+
+        # Log the first set of images to wandb
+        log_plot_to_wandb(fig, "test_results/main_comparison")
+
+        # Plot the segmentation for noisy labels:
+        fig = plt.figure(figsize=(9, 13))
+        columns = 4
+        rows = 1
+
+        ax = []
+        noisy_segs = [over_seg, under_seg, wrong_seg, good_seg]
+        noisy_segs_names = ['Pred of over', 'Pred of under', 'Pred of wrong', 'Pred of good']
+
+        for i in range(columns * rows):
+            noisy_seg_ = noisy_segs[i]
+            ax.append(fig.add_subplot(rows, columns, i + 1))
+            ax[-1].set_title(noisy_segs_names[i])
+            noisy_seg_ = Image.open(noisy_seg_)
+            noisy_seg_ = np.array(noisy_seg_, dtype='uint8')
+            plt.imshow(noisy_seg_, cmap='gray')
+
+        # Log the noisy segmentation results to wandb
+        log_plot_to_wandb(fig, "test_results/noisy_label_predictions")
+
+
+    @staticmethod
+    def log_plot_to_wandb(fig, log_name):
+        """Function to save plot to a BytesIO object for logging in wandb"""
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight')
+        buf.seek(0)
+        image = Image.open(buf)
+        wandb.log({log_name: wandb.Image(image)})
+        buf.close()
+        plt.close(fig)
+        return
+
