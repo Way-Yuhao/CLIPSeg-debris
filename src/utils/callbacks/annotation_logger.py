@@ -30,12 +30,15 @@ class AnnotationLogger(Callback):
         # to be defined later
         self.labeler_tags = None
         self.num_labelers = None
+        self.gt_labeler_tag = None
 
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
         os.makedirs(self.results_dir, exist_ok=True)
         os.makedirs(self.composite_results_dir, exist_ok=True)
         self.labeler_tags = trainer.datamodule.labeler_tags
+        self.gt_labeler_tag = trainer.datamodule.gt_labeler_tag
         self.num_labelers = len(self.labeler_tags)
+        return
 
     def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self.demonstrate_data(trainer)
@@ -62,35 +65,27 @@ class AnnotationLogger(Callback):
             dataset_ = trainer.datamodule.test_dataset
         else:
             raise NotImplementedError()
-        images, labels_over, labels_under, labels_wrong, labels_good, imagename = dataset_[self.demonstrate_idx]
-        images = np.mean(images, axis=0)
+        # images, labels_over, labels_under, labels_wrong, labels_good, imagename = dataset_[self.demonstrate_idx]
+        images, labels, gt_label, imagename = trainer.datamodule.unpack_batch(dataset_[self.demonstrate_idx])
+        # images = np.mean(images, axis=0)
 
         # plot the labels:
         fig = plt.figure()
-        columns = 5
+        columns = self.num_labelers + 1
         rows = 1
         ax = []
-        labels = []
-        labels_names = []
-        labels.append(images)
-        labels.append(labels_over)
-        labels.append(labels_under)
-        labels.append(labels_wrong)
-        labels.append(labels_good)
-        labels_names.append('Input')
-        labels_names.append('Over label')
-        labels_names.append('Under label')
-        labels_names.append('Wrong label')
-        labels_names.append('Good label')
+        images_to_display = [images]
+        images_to_display += labels
+        labels_names = ['Input'] + self.labeler_tags
 
         for i in range(columns * rows):
-            if i != 0:
-                label_ = labels[i][0, :, :]
-            else:
-                label_ = labels[i]
+            if i == 0: # input RGB
+                im = images_to_display[i].transpose(1, 2, 0) / 255.
+            else:  # labels
+                im = images_to_display[i][0, :, :]
             ax.append(fig.add_subplot(rows, columns, i + 1))
             ax[-1].set_title(labels_names[i])
-            plt.imshow(label_, cmap='gray')
+            plt.imshow(im, cmap='gray')
             ax[-1].axis('off')
 
         buf = io.BytesIO()

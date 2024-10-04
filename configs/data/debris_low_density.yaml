@@ -4,12 +4,12 @@ batch_size: 5
 num_workers: 2
 
 # Change path for your own datasets here:
-data_path: './data/MNIST_examples'
-dataset_tag: 'mnist'
+data_path: '/home/yuhaoliu/Data/HIDeAI/multiple_labelers_low_only'
+dataset_tag: 'test_kooshan'
 label_mode: 'multi'
 
-labeler_tags: ['over', 'under', 'wrong', 'good']
-gt_labeler_tag: 'good'
+labeler_tags: ['Annotator_4', 'Annotator_5', 'Annotator_6']
+gt_labeler_tag: 'Annotator_4'
 
 # full path to train/validate/test:
 test_path: ${data.data_path}/test

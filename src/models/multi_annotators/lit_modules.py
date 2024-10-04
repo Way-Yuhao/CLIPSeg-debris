@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 import numpy as np
 import torch
 from torch.nn import Softmax
@@ -24,6 +24,15 @@ class UNetCMsLitModule(LightningModule):
         # to be defined elsewhere
         self.test_dice = None
         self.test_dice_all = None
+        self.labeler_tags = None
+        self.num_labelers = None
+        self.gt_labeler_tag = None
+
+    def setup(self, stage: str) -> None:
+        self.labeler_tags = self.trainer.datamodule.labeler_tags
+        self.gt_labeler_tag = self.trainer.datamodule.gt_labeler_tag
+        self.num_labelers = len(self.labeler_tags)
+        return
 
     def configure_optimizers(self) -> Dict[str, Any]:
         optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
@@ -33,13 +42,15 @@ class UNetCMsLitModule(LightningModule):
 
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> STEP_OUTPUT:
         # unpack the batch
-        images, labels_over, labels_under, labels_wrong, labels_good, imagename = batch
+        # images, labels_over, labels_under, labels_wrong, labels_good, imagename = batch
+        # labels_all = []
+        # labels_all.append(labels_over)
+        # labels_all.append(labels_under)
+        # labels_all.append(labels_wrong)
+        # labels_all.append(labels_good)
+        images, labels_all, gt_label, image_name = self.unpack_batch(batch)
 
-        labels_all = []
-        labels_all.append(labels_over)
-        labels_all.append(labels_under)
-        labels_all.append(labels_wrong)
-        labels_all.append(labels_good)
+
 
         # model has two outputs:
         # first one is the probability map for true ground truth
@@ -54,18 +65,18 @@ class UNetCMsLitModule(LightningModule):
                                                      self.hparams.alpha)
 
         _, train_output = torch.max(outputs_logits, dim=1)
-        train_iou = segmentation_scores(labels_good.cpu().detach().numpy(), train_output.cpu().detach().numpy(),
+        train_iou = segmentation_scores(gt_label.cpu().detach().numpy(), train_output.cpu().detach().numpy(),
                                         self.hparams.class_no)
         self.log('train/loss', loss, on_epoch=True, on_step=False)
         self.log('train/loss_ce', loss_ce, on_epoch=True, on_step=False)
         self.log('train/regularization', loss_trace, on_epoch=True, on_step=False)
         self.log('train/iou', train_iou, on_epoch=True, on_step=False)
-
         return loss
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         # unpack the batch
-        v_images, v_labels_over, v_labels_under, v_labels_wrong, v_labels_good, v_imagename = batch
+        # v_images, v_labels_over, v_labels_under, v_labels_wrong, v_labels_good, v_imagename = batch
+        v_images, v_labels, gt_label, image_name = self.unpack_batch(batch)
         v_outputs_logits, cms = self.forward(v_images)
         b, c, h, w = v_outputs_logits.size()
         v_outputs_logits = Softmax(dim=1)(v_outputs_logits)
@@ -85,11 +96,13 @@ class UNetCMsLitModule(LightningModule):
             _, v_noisy_output = torch.max(v_noisy_output, dim=1)
             v_outputs_noisy.append(v_noisy_output.cpu().detach().numpy())
 
-        v_dice = segmentation_scores(v_labels_good.cpu().detach(), v_output.cpu().detach().numpy(),
+        v_dice = segmentation_scores(gt_label.cpu().detach(), v_output.cpu().detach().numpy(),
                                      self.hparams.class_no)
 
-        epoch_noisy_labels = [v_labels_over.cpu().detach().numpy(), v_labels_under.cpu().detach().numpy(),
-                              v_labels_wrong.cpu().detach().numpy(), v_labels_good.cpu().detach().numpy()]
+        # each v_label is (1, 1, 28, 28). epoch_noisy_lables is a list
+        # epoch_noisy_labels = [v_labels_over.cpu().detach().numpy(), v_labels_under.cpu().detach().numpy(),
+        #                       v_labels_wrong.cpu().detach().numpy(), v_labels_good.cpu().detach().numpy()]
+        epoch_noisy_labels = [label.cpu().detach().numpy() for label in v_labels]
         v_ged = generalized_energy_distance(epoch_noisy_labels, v_outputs_noisy, self.hparams.class_no)
 
         self.log('val/dice', v_dice, on_epoch=True)
@@ -98,7 +111,9 @@ class UNetCMsLitModule(LightningModule):
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> dict:
         # unpack the batch
-        v_images, labels_over, labels_under, labels_wrong, labels_good, imagename = batch
+        # v_images, labels_over, labels_under, labels_wrong, labels_good, imagename = batch
+        v_images, labels_all, gt_label, image_name = self.unpack_batch(batch)
+
         v_outputs_logits_original, v_outputs_logits_noisy = self.forward(v_images)
         b, c, h, w = v_outputs_logits_original.size()
         # plot the final segmentation map
@@ -115,7 +130,7 @@ class UNetCMsLitModule(LightningModule):
 
         step_output = {'img': v_images[:, 1, :, :].reshape(h, w).cpu().detach().numpy(),
                        'seg': v_outputs_logits.reshape(h, w).cpu().detach().numpy(),
-                       'label': labels_good.reshape(h, w).cpu().detach().numpy()}
+                       'label': gt_label.reshape(h, w).cpu().detach().numpy()}
         # plot the noisy segmentation maps:
         v_outputs_logits_original = v_outputs_logits_original.reshape(b, c, h * w)
         v_outputs_logits_original = v_outputs_logits_original.permute(0, 2, 1).contiguous()
@@ -138,3 +153,7 @@ class UNetCMsLitModule(LightningModule):
 
     def forward(self, x: torch.Tensor) -> Any:
         return self.net(x)
+
+    def unpack_batch(self, batch: List[torch.Tensor]) -> Tuple[torch.Tensor, List[torch.Tensor], torch.Tensor, Any]:
+        return self.trainer.datamodule.unpack_batch(batch)
+

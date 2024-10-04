@@ -12,11 +12,12 @@ __author__ = 'Yuhao Liu'
 
 class MNISTExampleDataModule(LightningDataModule):
 
-    def __init__(self, labeler_tags: List[str], *args, **kwargs):
+    def __init__(self, labeler_tags: List[str], gt_labeler_tag: str, *args, **kwargs):
         super().__init__()
-        self.save_hyperparameters(logger=False, ignore=("labeler_tags",))
+        self.save_hyperparameters(logger=False, ignore=("labeler_tags", "gt_labeler_tag"))
 
         self.labeler_tags = labeler_tags
+        self.gt_labeler_tag = gt_labeler_tag
         self.num_labelers = len(labeler_tags)
 
         # to be defined elsewhere
@@ -47,3 +48,13 @@ class MNISTExampleDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         test_loader = DataLoader(self.test_dataset, batch_size=1, shuffle=False, drop_last=False)
         return test_loader
+
+    def unpack_batch(self, batch: List[torch.Tensor]) -> Tuple[torch.Tensor, List[torch.Tensor], torch.Tensor, Any]:
+        input_images = batch[0]
+        labels = []
+        for i in range(self.num_labelers):
+            labels.append(batch[i + 1])
+        image_name = batch[-1]
+        gt_label_idx = self.labeler_tags.index(self.gt_labeler_tag)
+        gt_label = labels[gt_label_idx]
+        return input_images, labels, gt_label, image_name
