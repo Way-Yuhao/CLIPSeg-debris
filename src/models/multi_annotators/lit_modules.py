@@ -32,6 +32,7 @@ class UNetCMsLitModule(LightningModule):
         self.labeler_tags = self.trainer.datamodule.labeler_tags
         self.gt_labeler_tag = self.trainer.datamodule.gt_labeler_tag
         self.num_labelers = len(self.labeler_tags)
+        # self.net = self.net(noisy_labels_no=self.num_labelers)
         return
 
     def configure_optimizers(self) -> Dict[str, Any]:
@@ -144,9 +145,8 @@ class UNetCMsLitModule(LightningModule):
                                                                                                                    h, w)
             _, v_noisy_output = torch.max(v_noisy_output_original, dim=1)
 
-
             step_output[f'noisy_{j}_seg'] = v_noisy_output.reshape(h, w).cpu().detach().numpy()
-            step_output[f'{j}_label'] = batch[j+1].reshape(h, w).cpu().detach().numpy()
+            step_output[f'{j}_label'] = labels_all[j].reshape(h, w).cpu().detach().numpy()
             # save_name = save_path_visual_result + '/test_' + str(i) + '_noisy_' + str(j) + '_seg.png'
             # plt.imsave(save_name, v_noisy_output.reshape(h, w).cpu().detach().numpy(), cmap='gray')
         return step_output

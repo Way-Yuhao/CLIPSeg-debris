@@ -13,9 +13,11 @@ optimizer:
 
 net:
   _target_: src.models.multi_annotators.models.UNet_CMs
+#  _partial_: true
   in_ch: 3 # dimension of input (aka. input_dim)
   width: 24 # width of the network
   depth: 3 # depth of the network, downsampling times is (depth-1)
   class_no: ${model.class_no} # class number, 2 for binary
   norm: 'in'
   low_rank: false
+  noisy_labels_no: 3 # number of noisy labels FIXME

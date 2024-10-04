@@ -118,7 +118,7 @@ class AnnotationLogger(Callback):
             ax[0, i].set_title(title, fontsize=title_font_size)
             ax[0, i].axis('off')
 
-        ax[0, 3].axis('off')
+        ax[0, -1].axis('off')
 
         # Row 2: Predictions
         for i in range(n):

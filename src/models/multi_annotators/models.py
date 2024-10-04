@@ -13,7 +13,8 @@ class UNet_CMs(nn.Module):
     The segmentation network is U-net. The confusion  matrix network is defined in cm_layers
 
     """
-    def __init__(self, in_ch, width, depth, class_no, norm='in', low_rank=False):
+    def __init__(self, in_ch, width, depth, class_no, norm='in', low_rank=False,
+                 noisy_labels_no=4):
         #
         # ===============================================================================
         # in_ch: dimension of input
@@ -25,7 +26,7 @@ class UNet_CMs(nn.Module):
         super(UNet_CMs, self).__init__()
         #
         self.depth = depth
-        self.noisy_labels_no = 4
+        self.noisy_labels_no = noisy_labels_no
         self.lowrank = low_rank
         #
         self.final_in = class_no
