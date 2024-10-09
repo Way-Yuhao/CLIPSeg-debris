@@ -121,15 +121,7 @@ class UNetCMsLitModule(LightningModule):
         v_outputs_logits_original = Softmax(dim=1)(v_outputs_logits_original)
         _, v_outputs_logits = torch.max(v_outputs_logits_original, dim=1)
 
-        # save_name = save_path_visual_result + '/test_' + str(i) + '_seg.png'
-        # save_name_label = save_path_visual_result + '/test_' + str(i) + '_label.png'
-        # save_name_slice = save_path_visual_result + '/test_' + str(i) + '_img.png'
-
-        # plt.imsave(save_name_slice, v_images[:, 1, :, :].reshape(h, w).cpu().detach().numpy(), cmap='gray')
-        # plt.imsave(save_name, v_outputs_logits.reshape(h, w).cpu().detach().numpy(), cmap='gray')
-        # plt.imsave(save_name_label, labels_good.reshape(h, w).cpu().detach().numpy(), cmap='gray')
-
-        step_output = {'img': v_images[:, 1, :, :].reshape(h, w).cpu().detach().numpy(),
+        step_output = {'img': v_images.squeeze().permute(1, 2, 0).cpu().detach().numpy(),
                        'seg': v_outputs_logits.reshape(h, w).cpu().detach().numpy(),
                        'label': gt_label.reshape(h, w).cpu().detach().numpy()}
         # plot the noisy segmentation maps:
@@ -147,8 +139,6 @@ class UNetCMsLitModule(LightningModule):
 
             step_output[f'noisy_{j}_seg'] = v_noisy_output.reshape(h, w).cpu().detach().numpy()
             step_output[f'{j}_label'] = labels_all[j].reshape(h, w).cpu().detach().numpy()
-            # save_name = save_path_visual_result + '/test_' + str(i) + '_noisy_' + str(j) + '_seg.png'
-            # plt.imsave(save_name, v_noisy_output.reshape(h, w).cpu().detach().numpy(), cmap='gray')
         return step_output
 
     def forward(self, x: torch.Tensor) -> Any:

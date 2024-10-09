@@ -748,10 +748,22 @@ def test(testdata,
 
 class CustomDataset_punet(torch.utils.data.Dataset):
 
-    def __init__(self, dataset_location, dataset_tag, noisylabel, augmentation=False):
+    def __init__(self, dataset_location, dataset_tag, noisylabel, augmentation=False,
+                 transforms=None):
+        """
+        Note from Yuhao:
+        # TODO: input img transforms only support dataset_tag Kooshan
+        Args:
+            dataset_location:
+            dataset_tag:
+            noisylabel:
+            augmentation:
+            transforms:
+        """
         #
         self.label_mode = noisylabel
         self.dataset_tag = dataset_tag
+        self.transforms = transforms
         #
         if noisylabel == 'multi':
             #
@@ -850,6 +862,8 @@ class CustomDataset_punet(torch.utils.data.Dataset):
                 imagename = all_images[index]
                 path_image, imagename = os.path.split(imagename)
                 imagename, imageext = os.path.splitext(imagename)
+
+                image /= 255.
 
                 # Data augmentation (e.g., flipping)
                 if self.data_aug:

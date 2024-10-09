@@ -4,7 +4,7 @@ from lightning import LightningDataModule
 from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 from torchvision.datasets import MNIST
-from torchvision.transforms import transforms
+from torchvision.transforms import transforms as T
 from src.utils.multi_annotators_utils.utilis import CustomDataset_punet
 
 __author__ = 'Yuhao Liu'
@@ -12,13 +12,15 @@ __author__ = 'Yuhao Liu'
 
 class MNISTExampleDataModule(LightningDataModule):
 
-    def __init__(self, labeler_tags: List[str], gt_labeler_tag: str, *args, **kwargs):
+    def __init__(self, labeler_tags: List[str], gt_labeler_tag: str, transforms: Optional[T.Compose] = None,
+                 *args, **kwargs):
         super().__init__()
-        self.save_hyperparameters(logger=False, ignore=("labeler_tags", "gt_labeler_tag"))
+        self.save_hyperparameters(logger=False, ignore=("labeler_tags", "gt_labeler_tag", "transforms"))
 
         self.labeler_tags = labeler_tags
         self.gt_labeler_tag = gt_labeler_tag
         self.num_labelers = len(labeler_tags)
+        self.transforms = transforms
 
         # to be defined elsewhere
         self.train_dataset = None
@@ -27,14 +29,15 @@ class MNISTExampleDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         self.train_dataset = CustomDataset_punet(dataset_location=self.hparams.train_path,
-                                            dataset_tag=self.hparams.dataset_tag, noisylabel=self.hparams.label_mode,
-                                            augmentation=True)
+                                                dataset_tag=self.hparams.dataset_tag, noisylabel=self.hparams.label_mode,
+                                                augmentation=True, transforms=self.transforms)
         self.validate_dataset = CustomDataset_punet(dataset_location=self.hparams.validate_path,
-                                               dataset_tag=self.hparams.dataset_tag,
-                                               noisylabel=self.hparams.label_mode, augmentation=False)
-        self.test_dataset = CustomDataset_punet(dataset_location=self.hparams.test_path, dataset_tag=self.hparams.dataset_tag,
-                                           noisylabel=self.hparams.label_mode,
-                                           augmentation=False)
+                                                    dataset_tag=self.hparams.dataset_tag,
+                                                    noisylabel=self.hparams.label_mode, augmentation=False,
+                                                    transforms=self.transforms)
+        self.test_dataset = CustomDataset_punet(dataset_location=self.hparams.test_path,
+                                                dataset_tag=self.hparams.dataset_tag, noisylabel=self.hparams.label_mode,
+                                                augmentation=False, transforms=self.transforms)
 
     def train_dataloader(self) -> DataLoader[Any]:
         train_loader = DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True,

@@ -80,7 +80,7 @@ class AnnotationLogger(Callback):
 
         for i in range(columns * rows):
             if i == 0: # input RGB
-                im = images_to_display[i].transpose(1, 2, 0) / 255.
+                im = images_to_display[i].transpose(1, 2, 0)# / 255.
             else:  # labels
                 im = images_to_display[i][0, :, :]
             ax.append(fig.add_subplot(rows, columns, i + 1))
@@ -114,7 +114,7 @@ class AnnotationLogger(Callback):
 
         for i, (k, title) in enumerate(zip(row1_imgs_keys, row1_titles)):
             img = outputs[k]
-            ax[0, i].imshow(np.array(img), cmap='gray')
+            ax[0, i].imshow(np.array(img)) # , cmap='gray')
             ax[0, i].set_title(title, fontsize=title_font_size)
             ax[0, i].axis('off')
 

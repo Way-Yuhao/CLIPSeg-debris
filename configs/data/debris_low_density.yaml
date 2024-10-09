@@ -11,6 +11,14 @@ label_mode: 'multi'
 labeler_tags: ['Annotator_4', 'Annotator_5', 'Annotator_6']
 gt_labeler_tag: 'Annotator_4'
 
+#transforms:
+#  _target_: torchvision.transforms.Compose
+#  transforms:
+#    - _target_: torchvision.transforms.ToTensor
+#    - _target_: torchvision.transforms.Normalize
+#      mean: [0.5, 0.5, 0.5]
+#      std: [0.5, 0.5, 0.5]
+
 # full path to train/validate/test:
 test_path: ${data.data_path}/test
 train_path: ${data.data_path}/train
