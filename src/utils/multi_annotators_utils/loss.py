@@ -8,18 +8,16 @@ torch.backends.cudnn.deterministic = True
 def noisy_label_loss(pred, cms, labels, alpha=0.1):
     """ This function defines the proposed trace regularised loss function, suitable for either binary
     or multi-class segmentation task. Essentially, each pixel has a confusion matrix.
-
     Args:
         pred (torch.tensor): output tensor of the last layer of the segmentation network without Sigmoid or Softmax
-        cms (list): a list of output tensors for each noisy label, each item contains all of the modelled confusion matrix for each spatial location
+        cms (list): a list of output tensors for each noisy label, each item contains all of the modelled
+            confusion matrix for each spatial location
         labels (torch.tensor): labels
         alpha (double): a hyper-parameter to decide the strength of regularisation
-
     Returns:
         loss (double): total loss value, sum between main_loss and regularisation
         main_loss (double): main segmentation loss
         regularisation (double): regularisation loss
-
     """
     main_loss = 0.0
     regularisation = 0.0

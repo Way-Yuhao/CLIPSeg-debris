@@ -9,9 +9,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class UNet_CMs(nn.Module):
-    """ Proposed method containing a segmentation network and a confusion matrix network.
-    The segmentation network is U-net. The confusion  matrix network is defined in cm_layers
-
+    """
+    Proposed method containing a segmentation network and a confusion matrix network.
+    The segmentation network is U-net. The confusion matrix network is defined in cm_layers
     """
     def __init__(self, in_ch, width, depth, class_no, norm='in', low_rank=False,
                  noisy_labels_no=4):
@@ -33,7 +33,6 @@ class UNet_CMs(nn.Module):
         self.decoders = nn.ModuleList()
         self.encoders = nn.ModuleList()
         self.decoders_noisy_layers = nn.ModuleList()
-
 
         for i in range(self.depth):
             if i == 0:
@@ -60,9 +59,9 @@ class UNet_CMs(nn.Module):
         encoder_features = []
         y_noisy = []
 
-        for i in range(len(self.encoders)):
+        for i in range(len(self.encoders)): # encoder
             y = self.encoders[i](y)
-            encoder_features.append(y)
+            encoder_features.append(y) # decoder
         for i in range(len(encoder_features)):
             y = self.upsample(y)
             y_e = encoder_features[-(i+1)]
@@ -72,8 +71,7 @@ class UNet_CMs(nn.Module):
                 y = F.pad(y, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
             y = torch.cat([y_e, y], dim=1)
             y = self.decoders[-(i+1)](y)
-
-        for i in range(self.noisy_labels_no):
+        for i in range(self.noisy_labels_no): # generate noisy labels
             y_noisy_label = self.decoders_noisy_layers[i](y)
             y_noisy.append(y_noisy_label)
         y = self.conv_last(y)
@@ -81,8 +79,8 @@ class UNet_CMs(nn.Module):
 
 
 class UNet_GlobalCMs(nn.Module):
-    """ Baseline with trainable global confusion matrices.
-
+    """
+    Baseline with trainable global confusion matrices.
     Each annotator is modelled through a class_no x class_no matrix, fixed for all images.
     """
     def __init__(self, in_ch, width, depth, class_no, input_height, input_width, norm='in'):
@@ -172,10 +170,10 @@ class UNet_GlobalCMs(nn.Module):
 
 
 class cm_layers(nn.Module):
-    """ This class defines the annotator network, which models the confusion matrix.
+    """
+    This class defines the annotator network, which models the confusion matrix.
     Essentially, it share the semantic features with the segmentation network, but the output of annotator network
     has the size (b, c**2, h, w)
-
     """
 
     def __init__(self, in_channels, norm, class_no):
@@ -186,9 +184,7 @@ class cm_layers(nn.Module):
         self.relu = nn.Softplus()
 
     def forward(self, x):
-
         y = self.relu(self.conv_last(self.conv_2(self.conv_1(x))))
-
         return y
 
 
