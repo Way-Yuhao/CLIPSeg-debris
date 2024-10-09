@@ -24,79 +24,59 @@ class UNet_CMs(nn.Module):
         # rank: False
         # ===============================================================================
         super(UNet_CMs, self).__init__()
-        #
+
         self.depth = depth
         self.noisy_labels_no = noisy_labels_no
         self.lowrank = low_rank
-        #
         self.final_in = class_no
-        #
+
         self.decoders = nn.ModuleList()
         self.encoders = nn.ModuleList()
         self.decoders_noisy_layers = nn.ModuleList()
-        #
+
 
         for i in range(self.depth):
-
             if i == 0:
-                #
                 self.encoders.append(double_conv(in_channels=in_ch, out_channels=width, step=1, norm=norm))
                 self.decoders.append(double_conv(in_channels=width*2, out_channels=width, step=1, norm=norm))
-                #
             elif i < (self.depth - 1):
-                #
                 self.encoders.append(double_conv(in_channels=width*(2**(i - 1)), out_channels=width*(2**i), step=2, norm=norm))
                 self.decoders.append(double_conv(in_channels=width*(2**(i + 1)), out_channels=width*(2**(i - 1)), step=1, norm=norm))
-                #
             else:
-                #
                 self.encoders.append(double_conv(in_channels=width*(2**(i-1)), out_channels=width*(2**(i-1)), step=2, norm=norm))
                 self.decoders.append(double_conv(in_channels=width*(2**i), out_channels=width*(2**(i - 1)), step=1, norm=norm))
-                #
+
         self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.conv_last = nn.Conv2d(width, self.final_in, 1, bias=True)
-        #
+
         for i in range(self.noisy_labels_no):
-            #
             if self.lowrank is False:
                 self.decoders_noisy_layers.append(cm_layers(in_channels=width, norm=norm, class_no=self.final_in))
             else:
                 self.decoders_noisy_layers.append(low_rank_cm_layers(in_channels=width, norm=norm, class_no=self.final_in, rank=1))
 
     def forward(self, x):
-        #
         y = x
-        #
         encoder_features = []
         y_noisy = []
-        #
+
         for i in range(len(self.encoders)):
-            #
             y = self.encoders[i](y)
             encoder_features.append(y)
-        # print(y.shape)
         for i in range(len(encoder_features)):
-            #
             y = self.upsample(y)
             y_e = encoder_features[-(i+1)]
-            #
             if y_e.shape[2] != y.shape[2]:
                 diffY = torch.tensor([y_e.size()[2] - y.size()[2]])
                 diffX = torch.tensor([y_e.size()[3] - y.size()[3]])
-                #
                 y = F.pad(y, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
-            #
             y = torch.cat([y_e, y], dim=1)
-            #
             y = self.decoders[-(i+1)](y)
-        #
+
         for i in range(self.noisy_labels_no):
-            #
             y_noisy_label = self.decoders_noisy_layers[i](y)
             y_noisy.append(y_noisy_label)
-        #
         y = self.conv_last(y)
-        #
         return y, y_noisy
 
 
