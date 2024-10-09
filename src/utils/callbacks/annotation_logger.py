@@ -70,9 +70,7 @@ class AnnotationLogger(Callback):
             dataset_ = trainer.datamodule.test_dataset
         else:
             raise NotImplementedError()
-        # images, labels_over, labels_under, labels_wrong, labels_good, imagename = dataset_[self.demonstrate_idx]
         images, labels, gt_label, imagename = trainer.datamodule.unpack_batch(dataset_[self.demonstrate_idx])
-        # images = np.mean(images, axis=0)
 
         # plot the labels:
         fig = plt.figure()
@@ -125,8 +123,7 @@ class AnnotationLogger(Callback):
 
         ax[0, -1].axis('off')
 
-        # Row 2: Predictions
-        for i in range(n):
+        for i in range(n):  # Row 2: Predictions
             img = outputs[f'noisy_{i}_seg']
             ax[1, i].imshow(np.array(img), cmap='gray')
             if self.labeler_tags is not None:
@@ -135,8 +132,7 @@ class AnnotationLogger(Callback):
                 ax[1, i].set_title(f'Prediction of {i}', fontsize=title_font_size)
             ax[1, i].axis('off')
 
-        # Row 3: Labels of each annotator
-        for i in range(n):
+        for i in range(n):  # Row 3: Labels of each annotator
             img = outputs[f'{i}_label']
             ax[2, i].imshow(np.array(img), cmap='gray')
             if self.labeler_tags is not None:
@@ -145,8 +141,7 @@ class AnnotationLogger(Callback):
                 ax[2, i].set_title(f'Label of {i}', fontsize=title_font_size)
             ax[2, i].axis('off')
 
-        # Remove empty subplots if n < 3
-        if n < 3:
+        if n < 3: # Remove empty subplots if n < 3
             for i in range(n, 3):
                 ax[0, i].axis('off')
             for i in range(n, max(3, n)):
@@ -191,8 +186,7 @@ class AnnotationLogger(Callback):
 
         ax[0, 3].axis('off')
 
-        # Row 2: Noisy Predictions
-        for i in range(n):
+        for i in range(n): # Row 2: Noisy Predictions
             noisy_seg_path = os.path.join(self.results_dir, f'test_{test_data_index}_noisy_{i}_seg.png')
             img = Image.open(noisy_seg_path)
             ax[1, i].imshow(np.array(img), cmap='gray')
@@ -202,8 +196,7 @@ class AnnotationLogger(Callback):
                 ax[1, i].set_title(f'Prediction of {i}', fontsize=title_font_size)
             ax[1, i].axis('off')
 
-        # Remove empty subplots if n < 3
-        if n < 3:
+        if n < 3:  # Remove empty subplots if n < 3
             for i in range(n, 3):
                 ax[0, i].axis('off')
             for i in range(n, max(3, n)):
