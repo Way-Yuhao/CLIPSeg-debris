@@ -1,0 +1,21 @@
+_target_: src.models.clipseg.lightning_modules.CLIPSegLitModule
+#  out: 1
+#  depth: 3
+#amp: True
+
+#loss:
+#  _target_: torch.nn.functional.binary_cross_entropy_with_logits
+
+optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 0.001
+
+net:
+  _target_: src.models.clipseg.clipseg.CLIPDensePredT
+  version: 'ViT-B/16'
+  reduce_dim: 64
+  complex_trans_conv: true
+  extract_layers: [3, 7, 9]
+  fix_shift: False
+

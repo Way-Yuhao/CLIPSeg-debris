@@ -4,7 +4,7 @@ batch_size: 5
 num_workers: 2
 
 # Change path for your own datasets here:
-data_path: '/home/yuhaoliu/Data/HIDeAI/multiple_labelers_low_only'
+data_path: ${local.data_dir}/HIDeAI/multiple_labelers_low_only'
 dataset_tag: 'test_kooshan'
 label_mode: 'multi'
 

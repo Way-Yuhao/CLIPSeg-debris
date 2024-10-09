@@ -4,7 +4,7 @@ defaults:
   - model_summary
   - rich_progress_bar
   - slack_alert
-  - annotation_logger
+#  - annotation_logger
   - _self_
 
 model_checkpoint:

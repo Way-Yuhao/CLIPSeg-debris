@@ -1,0 +1,12 @@
+# single annotator, multi-class
+
+_target_: src.data.debris_datamodule.DebrisDataModule
+batch_size: 64
+num_workers: 64
+pin_memory: false
+
+# dataset parameters
+dataset_dir: ${local.data_dir}/HIDeAI/finetune_dataset_ian_ike
+debris_free_dataset_dir: ${local.data_dir}/HIDeAI/2024_04_30_labels/Negative_All/
+resize_to: [256, 256] # [224, 200]
+negative_prob: 0.2
