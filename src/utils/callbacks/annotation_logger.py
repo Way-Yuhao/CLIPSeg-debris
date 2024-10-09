@@ -22,6 +22,7 @@ class AnnotationLogger(Callback):
         self.save_dir = save_dir
         self.demonstrate_on_set = 'val'
         self.demonstrate_idx = 6
+        self.val_idx = 0
         self.test_idx = 15
 
         self.results_dir = os.path.join(self.save_dir, 'results')
@@ -42,6 +43,11 @@ class AnnotationLogger(Callback):
 
     def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self.demonstrate_data(trainer)
+
+    def on_validation_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
+                                batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        if batch_idx == self.val_idx:
+            self.save_prediction_composite(outputs, 'val', batch_idx, True)
 
     def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
                           batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
@@ -156,7 +162,7 @@ class AnnotationLogger(Callback):
         buf.seek(0)
         image = Image.open(buf)
         if log_wandb:
-            wandb.log({f"{phase}/results": wandb.Image(image, caption=f'{phase} {idx} Results')})
+            wandb.log({f"{phase}/results": wandb.Image(image, caption=f'{phase} {idx} results')})
         buf.close()
         plt.close(fig)
 
@@ -211,7 +217,7 @@ class AnnotationLogger(Callback):
                     format='png', bbox_inches='tight')
         buf.seek(0)
         image = Image.open(buf)
-        wandb.log({"test/test_results": wandb.Image(image, caption=f'Test {test_data_index} Results')})
+        wandb.log({"test/test_results": wandb.Image(image, caption=f'Test {test_data_index} results')})
         buf.close()
         plt.close(fig)
 

@@ -64,7 +64,7 @@ class UNetCMsLitModule(LightningModule):
         self.log('train/iou', train_iou, on_epoch=True, on_step=False)
         return loss
 
-    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict:
         # unpack the batch
         v_images, v_labels, gt_label, image_name = self.unpack_batch(batch)
         v_outputs_logits, cms = self.forward(v_images)
@@ -78,6 +78,10 @@ class UNetCMsLitModule(LightningModule):
         v_outputs_logits = v_outputs_logits.permute(0, 2, 1).contiguous().view(b * h * w, c)
         v_outputs_logits = v_outputs_logits.view(b * h * w, c, 1)
 
+        step_output = {'img': v_images.squeeze().permute(1, 2, 0).cpu().detach().numpy(),
+                       'seg': v_output.reshape(h, w).cpu().detach().numpy(),
+                       'label': gt_label.reshape(h, w).cpu().detach().numpy()}
+        j = 0
         for cm in cms:
             cm = cm.reshape(b, c ** 2, h * w).permute(0, 2, 1).contiguous().view(b * h * w, c * c).view(b * h * w, c, c)
             cm = cm / cm.sum(1, keepdim=True)
@@ -86,6 +90,10 @@ class UNetCMsLitModule(LightningModule):
             _, v_noisy_output = torch.max(v_noisy_output, dim=1)
             v_outputs_noisy.append(v_noisy_output.cpu().detach().numpy())
 
+            step_output[f'noisy_{j}_seg'] = v_noisy_output.reshape(h, w).cpu().detach().numpy()
+            step_output[f'{j}_label'] = v_labels[j].reshape(h, w).cpu().detach().numpy()
+            j += 1
+
         v_dice = segmentation_scores(gt_label.cpu().detach(), v_output.cpu().detach().numpy(),
                                      self.hparams.class_no)
         epoch_noisy_labels = [label.cpu().detach().numpy() for label in v_labels]
@@ -93,9 +101,10 @@ class UNetCMsLitModule(LightningModule):
 
         self.log('val/dice', v_dice, on_epoch=True)
         self.log('val/ged', v_ged, on_epoch=True)
-        return
+        return step_output
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> dict:
+
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict:
         # unpack the batch
         v_images, labels_all, gt_label, image_name = self.unpack_batch(batch)
 
