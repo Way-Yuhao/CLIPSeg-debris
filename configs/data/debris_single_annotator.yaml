@@ -5,6 +5,8 @@ batch_size: 64
 num_workers: 64
 pin_memory: false
 
+mask: "text_and_crop_blur_highlight352"
+
 # dataset parameters
 dataset_dir: ${local.data_dir}/HIDeAI/finetune_dataset_ian_ike
 debris_free_dataset_dir: ${local.data_dir}/HIDeAI/2024_04_30_labels/Negative_All/

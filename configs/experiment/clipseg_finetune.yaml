@@ -1,0 +1,5 @@
+# @package _global_
+
+trainer:
+  max_steps: 20000
+  precision: 16 # for amp set to true
