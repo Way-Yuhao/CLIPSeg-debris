@@ -37,6 +37,29 @@ class SlackAlert(Callback):
         self.at_epoch = at_epoch
         self.at_global_step = at_global_step
         self.hostname = socket.gethostname()
+        self.webhook_url = None
+
+    def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
+        path_to_restore = os.getcwd()
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
+        load_dotenv('.env')
+        os.chdir(path_to_restore)
+        self.webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+        if self.webhook_url is None:
+                msg = 'SlackAlert: To send alerts to slack, set SLACK_WEBHOOK_URL in .env file under project root directory.'
+                yprint(msg)
+                self.disabled = True
+        return
+
+    def alert(self, message: str):
+        data = {'text': message,
+                'username': 'Webhook Alert',
+                'icon_emoji': ':robot_face:'}
+        response = requests.post(self.webhook_url, json=data)
+        if response.status_code != 200:
+            raise ValueError('Request to slack returned an error %s, the response is:\n%s'
+                             % (response.status_code, response.text))
+        return
 
     def on_train_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         """
@@ -59,7 +82,7 @@ class SlackAlert(Callback):
         device = str(trainer.strategy.root_device)
         message = (f'*{title}*\nTime completed: {formatted_time}\nHostname: {self.hostname}\nDevice: {device}\n'
                    f'Wandb URL: {wandb_url}\n')
-        alert(message)
+        self.alert(message)
         return
 
     def on_exception(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", exception: BaseException) -> None:
@@ -67,7 +90,8 @@ class SlackAlert(Callback):
         Send slack alert on exceptions.
         """
         if self.disabled:
-            raise exception
+            # raise exception
+            return
         stack_trace = traceback.format_exc()
         device = str(trainer.strategy.root_device)
         now = datetime.now().replace(microsecond=0)
@@ -79,9 +103,9 @@ class SlackAlert(Callback):
                 print('SlackAlert: Encountered keyboard interrupt. Slack alert not sent.\n'
                       'To enable slack alerts on keyboard interrupts, set `ignore_keyboard_interrupt` to False.')
                 raise exception
-        alert(message)
+        self.alert(message)
         self.exception_occurred = True
-        raise exception
+        # raise exception
 
     def teardown(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
         """
@@ -93,10 +117,10 @@ class SlackAlert(Callback):
             formatted_time = now.strftime("%Y-%m-%d %H:%M:%S")
             device = str(trainer.strategy.root_device) # cuda device
             message = f'*{title}*\n```Time completed: {formatted_time}\nHostname: {self.hostname}\nDevice: {device}```'
-            alert(message)
+            self.alert(message)
         return
 
-def alert(message):
+def alert(message: str):
     """
     Sends a message to a designated slack channel, which a SLACK_WEBHOOK_URL to be set in .env file.
     If webhook URL is not found, the message is printed to stdout in red.
@@ -218,3 +242,6 @@ def rprint(msg):
     :return:
     """
     print(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
+
+if __name__ == '__main__':
+    s = SlackAlert()

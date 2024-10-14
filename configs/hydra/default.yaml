@@ -18,6 +18,21 @@ job_logging:
       # Incorporates fix from https://github.com/facebookresearch/hydra/pull/2242
       filename: ${hydra.runtime.output_dir}/${task_name}.log
 
+#hydra_logging:
+#  version: 1
+#  disable_existing_loggers: false
+#  formatters:
+#    simple:
+#      format: '%(message)s'
+#  handlers:
+#    console:
+#      class: logging.StreamHandler
+#      formatter: simple
+#      level: WARNING  # Suppress error logs
+#  root:
+#    level: WARNING
+
+
 #job:
 #    env_set:
 #      COLUMNS: 120  # Set desired console width
