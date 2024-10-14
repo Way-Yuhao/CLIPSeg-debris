@@ -21,7 +21,8 @@ class DebrisDataset(Dataset):
         # debris density segmentation dataset
         self.dataset_dir = dataset_dir
         self.original_image_dir = p.join(dataset_dir, 'original')
-        self.original_imgs = natsorted([p.join(self.original_image_dir, f) for f in os.listdir(self.original_image_dir) if f.endswith('.png')])
+        self.original_imgs = natsorted([p.join(self.original_image_dir, f)
+                                        for f in os.listdir(self.original_image_dir) if f.endswith('.png')])
         # filename has the format post-rgb-000126_merged_50m.png, where id here is 000126
         self.img_ids = [f.split('-')[2].split('_')[0] for f in self.original_imgs]
         self.annotation_dir = p.join(dataset_dir, 'segmentation_hl')
@@ -34,7 +35,8 @@ class DebrisDataset(Dataset):
 
         # debris free dataset (manually classified)
         self.debris_free_dataset_dir = debris_free_dataset_dir
-        self.negative_imgs = natsorted([p.join(self.debris_free_dataset_dir, f) for f in os.listdir(self.debris_free_dataset_dir) if f.endswith('.png')])
+        self.negative_imgs = natsorted([p.join(self.debris_free_dataset_dir, f)
+                                        for f in os.listdir(self.debris_free_dataset_dir) if f.endswith('.png')])
         negative_img_ids = [f.split('-')[2].split('_')[0] for f in self.negative_imgs]
         self.img_ids += negative_img_ids
         # create an empty annotation image holder
@@ -42,7 +44,8 @@ class DebrisDataset(Dataset):
         self.sample_ids += [(i, self.empty_annotation) for i in negative_img_ids]
 
         # Define the normalization transform
-        self.normalize = transforms.Normalize((0.57784108, 0.5724125,  0.5619426), (0.24724819, 0.24302182, 0.23344601))
+        self.normalize = transforms.Normalize((0.57784108, 0.5724125,  0.5619426),
+                                              (0.24724819, 0.24302182, 0.23344601))
         self.resize_to = resize_to
         return
 
@@ -63,7 +66,7 @@ class DebrisDataset(Dataset):
             raise FileNotFoundError(f'Image file for img_id {img_id} not found.')
         img = cv2.imread(img_file, cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, self.resize_to)  # resize
+        img = cv2.resize(img, self.resize_to)
         return img
 
     def get_annotation(self, annotation_file):

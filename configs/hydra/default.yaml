@@ -32,7 +32,6 @@ hydra_logging:
   root:
     level: WARNING
 
-
 #job:
 #    env_set:
 #      COLUMNS: 120  # Set desired console width
