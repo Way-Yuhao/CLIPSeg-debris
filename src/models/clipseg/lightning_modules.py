@@ -27,7 +27,21 @@ class CLIPSegLitModule(LightningModule):
         self.dataset_mask = None
         self.dataset_class = None
 
+        # debug
+        # self.example_input_array = [torch.rand(4, 3, 256, 256), torch.rand(4, 512)]
+
     def setup(self, stage: str) -> None:
+        if self.hparams.pretrained_clipseg_ckpt is not None:
+            print(f'Loading pretrained model from {self.hparams.pretrained_clipseg_ckpt}')
+            loaded_state_dict = torch.load(self.hparams.pretrained_clipseg_ckpt)
+            self.model.load_state_dict(loaded_state_dict, strict=False)
+            # loaded_state_dict = checkpoint['state_dict']
+            # new_state_dict = {}
+            # prefix = 'clip_model.'
+            # for key, value in loaded_state_dict.items():
+            #     new_key = prefix + key
+            #     new_state_dict[new_key] = value
+            # self.model.load_state_dict(new_state_dict)
         self.dataset_mask = self.trainer.datamodule.hparams.mask
         self.dataset_class = self.trainer.datamodule.train_dataset.__class__.__name__
 
@@ -46,6 +60,10 @@ class CLIPSegLitModule(LightningModule):
             }
         else:
             return {"optimizer": optimizer}
+
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
+        """for debug"""
+        return self.model(*args, **kwargs)
 
     def training_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
         data_x, data_y = batch # unpack
@@ -88,7 +106,7 @@ class CLIPSegLitModule(LightningModule):
                     cond = cond.cuda()
 
         # with autocast_fn():
-        visual_q = None
+        # visual_q = None
         pred, visual_q, _, _ = self.model(data_x[0].cuda(), cond, return_features=True)
         loss = self.loss_fn(pred, data_y[0].cuda())
         # TODO monitor loss
@@ -101,38 +119,62 @@ class CLIPSegLitModule(LightningModule):
         # end of autocast
         # TODO scale loss with GradScaler()
 
-        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
         step_output = {"loss": loss, "pred": pred, "data_x": data_x, "data_y": data_y}
+        return step_output
+
+    def validation_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
+        data_x, data_y = batch  # unpack
+
+        prompts = self.model.sample_prompts(data_x[1], prompt_list=('a photo of a {}',))
+        pred, visual_q, _, _ = self.model(data_x[0], prompts, return_features=True)
+
+        # TODO: add metrics
+        # if metric_class is not None:
+        #     metric.add([pred], data_y)
+
+        # pred = model(data_x[0], prompts)
+        # loss = loss_fn(pred[0], data_y[0])
+        loss = self.loss_fn(pred, data_y[0])
+        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
+        step_output = {"pred": pred, "data_x": data_x, "data_y": data_y}
         return step_output
 
     def on_train_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int) -> None:
         if batch_idx == 0:
-            data_x, data_y, pred = outputs["data_x"], outputs["data_y"], outputs["pred"]
-            sample_density = data_x[1][0][11:]
-            # Create a new figure
-            fig, axs = plt.subplots(1, 3, figsize=(10, 3))
-            # First subplot for the query image
-            query_img_rescaled = data_x[0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
-            query_img_rescaled = (query_img_rescaled - query_img_rescaled.min()) / (
-                        query_img_rescaled.max() - query_img_rescaled.min())
-            axs[0].imshow(query_img_rescaled)
-            axs[0].set_title(f'query image')
-            # Second subplot for the prediction
-            axs[1].imshow(pred[0][0, :, :].detach().cpu().numpy())
-            axs[1].set_title(f'prediction ({sample_density})')
-            # Third subplot for the ground truth
-            axs[2].imshow(data_y[0][0, 0, :, :].detach().cpu().numpy())
-            axs[2].set_title(f'gt ({sample_density})')
-            plt.tight_layout()
+            self.log_img_pair(outputs, mode='train')
 
-            # Save the figure to a BytesIO object
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png')
-            # Close the figure
-            plt.close(fig)
+    def on_validation_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        if batch_idx == 0:
+            self.log_img_pair(outputs, mode='val')
 
-            # Convert buffer to a PIL Image
-            buf.seek(0)
-            img = Image.open(buf)
-            # Log the PIL Image to wandb
-            wandb.log({"train/images": wandb.Image(img)})
+    @staticmethod
+    def log_img_pair(outputs: STEP_OUTPUT, mode: str):
+        data_x, data_y, pred = outputs["data_x"], outputs["data_y"], outputs["pred"]
+        sample_density = data_x[1][0][11:]
+        # Create a new figure
+        fig, axs = plt.subplots(1, 3, figsize=(10, 3))
+        # First subplot for the query image
+        query_img_rescaled = data_x[0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
+        query_img_rescaled = (query_img_rescaled - query_img_rescaled.min()) / (
+                query_img_rescaled.max() - query_img_rescaled.min())
+        axs[0].imshow(query_img_rescaled)
+        axs[0].set_title(f'query image')
+        # Second subplot for the prediction
+        axs[1].imshow(pred[0][0, :, :].detach().cpu().numpy())
+        axs[1].set_title(f'prediction ({sample_density})')
+        # Third subplot for the ground truth
+        axs[2].imshow(data_y[0][0, 0, :, :].detach().cpu().numpy())
+        axs[2].set_title(f'gt ({sample_density})')
+        plt.tight_layout()
+        # Save the figure to a BytesIO object
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        # Close the figure
+        plt.close(fig)
+        # Convert buffer to a PIL Image
+        buf.seek(0)
+        img = Image.open(buf)
+        # Log the PIL Image to wandb
+        wandb.log({f"{mode}/images": wandb.Image(img)})
+

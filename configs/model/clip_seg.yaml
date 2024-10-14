@@ -5,6 +5,7 @@ _target_: src.models.clipseg.lightning_modules.CLIPSegLitModule
 mix: true
 mix_text_max: 0.5
 mix_text_min: 0.0
+pretrained_clipseg_ckpt: ${local.model_root_dir}/CLIPSeg/rd64-uni-refined.pth
 
 loss_fn:
   _target_: src.utils.clipseg_utils.loss.BinaryCrossEntropyWithLogitsLoss
@@ -17,14 +18,15 @@ optimizer:
 scheduler:
   _target_: torch.optim.lr_scheduler.CosineAnnealingLR
   _partial_: true
-  T_max: 20000
+#  T_max: 20000
+  T_max: 50000 # rd64-uni-refined
   eta_min: 0.0001
 
 model:
   _target_: src.models.clipseg.clipseg.CLIPDensePredT
   version: 'ViT-B/16'
   reduce_dim: 64
-  complex_trans_conv: true
+  complex_trans_conv: true # rd64-uni-refined
   extract_layers: [3, 7, 9]
-  fix_shift: False
+  fix_shift: false
 

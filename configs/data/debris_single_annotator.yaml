@@ -2,7 +2,7 @@
 
 _target_: src.data.debris_datamodule.DebrisDataModule
 batch_size: 64
-num_workers: 64
+num_workers: 12
 pin_memory: false
 
 mask: "text_and_crop_blur_highlight352"

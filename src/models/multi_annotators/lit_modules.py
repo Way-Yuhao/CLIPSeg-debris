@@ -28,6 +28,9 @@ class UNetCMsLitModule(LightningModule):
         self.num_labelers = None
         self.gt_labeler_tag = None
 
+        # debug
+        # self.example_input_array = torch.rand(4, 3, 256, 256)
+
     def setup(self, stage: str) -> None:
         self.labeler_tags = self.trainer.datamodule.labeler_tags
         self.gt_labeler_tag = self.trainer.datamodule.gt_labeler_tag

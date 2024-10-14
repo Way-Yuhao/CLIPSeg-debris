@@ -28,15 +28,17 @@ class DebrisDataModule(LightningDataModule):
         self.test_dataset = None
 
     def setup(self, stage: Optional[str] = None) -> None:
-        self.train_dataset = DebrisDataset(dataset_dir=self.dataset_dir,
-                                           debris_free_dataset_dir=self.debris_free_dataset_dir,
-                                           resize_to=self.resize_to, negative_prob=self.negative_prob)
-        self.validate_dataset = DebrisDataset(dataset_dir=self.dataset_dir,
-                                              debris_free_dataset_dir=self.debris_free_dataset_dir,
-                                              resize_to=self.resize_to, negative_prob=self.negative_prob)
-        self.test_dataset = DebrisDataset(dataset_dir=self.dataset_dir,
-                                          debris_free_dataset_dir=self.debris_free_dataset_dir,
-                                          resize_to=self.resize_to, negative_prob=self.negative_prob)
+        # Full dataset used for both training and validation
+        full_dataset = DebrisDataset(dataset_dir=self.dataset_dir,
+                                     debris_free_dataset_dir=self.debris_free_dataset_dir,
+                                     resize_to=self.resize_to, negative_prob=self.negative_prob)
+
+        # Split dataset: 80% for training, 20% for validation
+        train_size = int(0.8 * len(full_dataset))
+        val_size = len(full_dataset) - train_size
+        self.train_dataset, self.validate_dataset = random_split(full_dataset, [train_size, val_size])
+        # If you need to setup a test dataset, you can do it here, but it's ignored as per your request
+        self.test_dataset = None  # You can set this up as needed
 
 
     def train_dataloader(self) -> DataLoader:
