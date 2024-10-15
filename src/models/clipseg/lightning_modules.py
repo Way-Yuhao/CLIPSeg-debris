@@ -70,7 +70,7 @@ class CLIPSegLitModule(LightningModule):
         if self.hparams.mix:
             assert self.dataset_mask.startswith('text_and')
             # with autocast_fn() # FIXME: this might be an issue
-            prompts = self.model.sample_prompts(data_x[1])
+            prompts = self.model.sample_prompts(data_x[1], prompt_list=('a photo of {}',))
 
             text_cond = self.model.compute_conditional(prompts)
             if self.model.__class__.__name__ == 'CLIPDensePredTMasked':
@@ -126,7 +126,7 @@ class CLIPSegLitModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
         data_x, data_y = batch  # unpack
 
-        prompts = self.model.sample_prompts(data_x[1], prompt_list=('a photo of a {}',))
+        prompts = self.model.sample_prompts(data_x[1], prompt_list=('a photo of {}',))
         pred, visual_q, _, _ = self.model(data_x[0], prompts, return_features=True)
 
         # TODO: add metrics
@@ -151,7 +151,7 @@ class CLIPSegLitModule(LightningModule):
     @staticmethod
     def log_img_pair(outputs: STEP_OUTPUT, mode: str):
         data_x, data_y, pred = outputs["data_x"], outputs["data_y"], outputs["pred"]
-        sample_density = data_x[1][0][11:]
+        shortened_prompt = data_x[1][0][10:]
         # Create a new figure
         fig, axs = plt.subplots(1, 3, figsize=(10, 3))
         # First subplot for the query image
@@ -162,10 +162,10 @@ class CLIPSegLitModule(LightningModule):
         axs[0].set_title(f'query image')
         # Second subplot for the prediction
         axs[1].imshow(pred[0][0, :, :].detach().cpu().numpy())
-        axs[1].set_title(f'prediction ({sample_density})')
+        axs[1].set_title(f'prediction ({shortened_prompt})')
         # Third subplot for the ground truth
         axs[2].imshow(data_y[0][0, 0, :, :].detach().cpu().numpy())
-        axs[2].set_title(f'gt ({sample_density})')
+        axs[2].set_title(f'gt ({shortened_prompt})')
         plt.tight_layout()
         # Save the figure to a BytesIO object
         buf = io.BytesIO()

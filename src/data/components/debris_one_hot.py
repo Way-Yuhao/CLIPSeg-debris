@@ -97,7 +97,8 @@ class DebrisOneHotDataset(Dataset):
     def find_annotation_one_hot(self, img_id: str):
         # find one-hot annotation file
         annotation_files = [f for f in self.annotation_files if img_id in f]
-        assert len(annotation_files) == 1
+        assert len(annotation_files) == 1, (f'Found {len(annotation_files)} annotation files '
+                                            f'for {img_id}: {annotation_files}')
         annotation_one_hot = cv2.imread(annotation_files[0], cv2.IMREAD_COLOR)
         # annotation_one_hot = cv2.cvtColor(annotation_one_hot, cv2.COLOR_BGR2RGB)
         annotation_one_hot = cv2.resize(annotation_one_hot, self.resize_to, cv2.INTER_LINEAR)
@@ -122,7 +123,8 @@ class DebrisOneHotDataset(Dataset):
            annotation = annotation.transpose(2, 0, 1)
         t = torch.tensor(annotation, dtype=torch.float32)
         t = t / 255.0
-        # t = t.unsqueeze(0)
+        if len(t.shape) == 2:
+            t = t.unsqueeze(0)
         return t
 
 
