@@ -38,17 +38,18 @@ class SlackAlert(Callback):
         self.at_global_step = at_global_step
         self.hostname = socket.gethostname()
         self.webhook_url = None
+        self.configure_slack_alert()
 
-    def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
+    def configure_slack_alert(self):
         path_to_restore = os.getcwd()
         os.chdir(os.path.dirname(os.path.realpath(__file__)))
         load_dotenv('.env')
         os.chdir(path_to_restore)
         self.webhook_url = os.getenv('SLACK_WEBHOOK_URL')
         if self.webhook_url is None:
-                msg = 'SlackAlert: To send alerts to slack, set SLACK_WEBHOOK_URL in .env file under project root directory.'
-                yprint(msg)
-                self.disabled = True
+            msg = 'SlackAlert: To send alerts to slack, set SLACK_WEBHOOK_URL in .env file under project root directory.'
+            yprint(msg)
+            self.disabled = True
         return
 
     def alert(self, message: str):

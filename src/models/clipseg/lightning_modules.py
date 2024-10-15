@@ -109,7 +109,6 @@ class CLIPSegLitModule(LightningModule):
         # visual_q = None
         pred, visual_q, _, _ = self.model(data_x[0].cuda(), cond, return_features=True)
         loss = self.loss_fn(pred, data_y[0].cuda())
-        raise Exception('stop here')
         # TODO monitor loss
         # if torch.isnan(loss) or torch.isinf(loss):
         #     # skip if loss is nan

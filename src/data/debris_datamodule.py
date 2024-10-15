@@ -28,12 +28,12 @@ class DebrisDataModule(LightningDataModule):
         self.test_dataset = None
 
     def setup(self, stage: Optional[str] = None) -> None:
-        # Full dataset used for both training and validation
+        # full dataset used for both training and validation
         full_dataset = DebrisDataset(dataset_dir=self.dataset_dir,
                                      debris_free_dataset_dir=self.debris_free_dataset_dir,
                                      resize_to=self.resize_to, negative_prob=self.negative_prob)
 
-        # Split dataset: 80% for training, 20% for validation
+        # split dataset: 80% for training, 20% for validation
         train_size = int(0.8 * len(full_dataset))
         val_size = len(full_dataset) - train_size
         self.train_dataset, self.validate_dataset = random_split(full_dataset, [train_size, val_size])
@@ -52,3 +52,5 @@ class DebrisDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader:
         return DataLoader(self.test_dataset, batch_size=self.hparams.batch_size, shuffle=False,
                           num_workers=self.hparams.num_workers, pin_memory=self.hparams.pin_memory)
+
+

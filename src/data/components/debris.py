@@ -101,6 +101,8 @@ class DebrisDataset(Dataset):
             vis_p_density = other_annotation_file.split('_')[-1].split('.')[0].lower()
             other_annotation_file = p.join(self.vis_prompt_dir, other_annotation_file)
             other_annotation = cv2.imread(other_annotation_file, cv2.IMREAD_COLOR)
+            if other_annotation is None:
+                raise FileNotFoundError(f'Visual prompt file not found: {other_annotation_file}')
             other_annotation = cv2.cvtColor(other_annotation, cv2.COLOR_BGR2RGB)
             other_annotation = cv2.resize(other_annotation, self.resize_to)  # resize
             override_prompt = 'a photo of debris at ' + vis_p_density + ' density'
