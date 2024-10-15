@@ -149,10 +149,28 @@ def generated_merged_annotations(rgb_img_dir: str, segmentation_dir: str, merged
         output_file = os.path.join(merged_segmentation_output_dir, f'post-rgb-{idx}_merged_onehot.png')
         cv2.imwrite(output_file, one_hot_segmentation)
 
+def generate_one_hot_for_negative(rgb_img_dir: str, seg_output_dir: str):
+    os.makedirs(seg_output_dir, exist_ok=True)
+    rgb_imgs = os.listdir(rgb_img_dir)
+    rgb_imgs = natsorted([f for f in rgb_imgs if f.endswith('.png') and '._' not in f])
+    indices = [re.search(r'\d+', rgb_img).group() for rgb_img in rgb_imgs]
+    print(len(indices))
+    for idx in tqdm(indices):
+        # rgb_img = [f for f in rgb_imgs if idx in f][0]
+        one_hot_segmentation = np.zeros((512, 512, 3), dtype=np.uint8)
+        one_hot_segmentation[:, :, 0] = 255 # no debris
+        output_file = os.path.join(seg_output_dir, f'post-rgb-{idx}_merged_onehot.png')
+        cv2.imwrite(output_file, one_hot_segmentation)
+
+
 if __name__ == '__main__':
-    rgb_img_dir = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/original'
-    segmentation_dir = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/segmentation_hl'
-    vis_prompt_output_dir = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/vis_prompts_hl'
-    merged_annotations = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/segmentation_merged'
-    # generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
-    generated_merged_annotations(rgb_img_dir, segmentation_dir, merged_annotations)
+    # rgb_img_dir = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/original'
+    # segmentation_dir = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/segmentation_hl'
+    # vis_prompt_output_dir = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/vis_prompts_hl'
+    # merged_annotations = '/home/yuhaoliu/Data/HIDeAI/merged_multi_labeler/union/segmentation_merged'
+    # # generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
+    # generated_merged_annotations(rgb_img_dir, segmentation_dir, merged_annotations)
+
+    negative_rgb_dir = '/home/yuhaoliu/Data/HIDeAI/negative_955/rgb'
+    negative_seg_dir = '/home/yuhaoliu/Data/HIDeAI/negative_955/one_hot_seg'
+    generate_one_hot_for_negative(negative_rgb_dir, negative_seg_dir)
