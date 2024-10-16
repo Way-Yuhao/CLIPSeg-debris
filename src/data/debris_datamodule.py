@@ -31,11 +31,14 @@ class DebrisDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         self.delete_dot_underscore_files(self.full_dataset.dataset_dir)
-        # full dataset used for both training and validation
-        # full_dataset = DebrisDataset(dataset_dir=self.dataset_dir,
-        #                              debris_free_dataset_dir=self.debris_free_dataset_dir,
-        #                              resize_to=self.resize_to, negative_prob=self.negative_prob)
 
+        # split dataset
+        self._split_dataset_random()
+
+        self.print_dataset_stats() # print dataset stats
+
+
+    def _split_dataset_random(self):
         # split dataset: 80% for training, 20% for validation
         train_size = int(0.8 * len(self.full_dataset))
         val_size = len(self.full_dataset) - train_size
@@ -43,6 +46,17 @@ class DebrisDataModule(LightningDataModule):
         # If you need to setup a test dataset, you can do it here, but it's ignored as per your request
         self.test_dataset = None  # You can set this up as needed
 
+
+
+    def split_dataset_by_hurricane(self):
+        raise NotImplementedError()
+
+    def print_dataset_stats(self):
+        print('-------------- Dataset Statistics --------------------')
+        print(f"Train dataset size: {len(self.train_dataset)}")
+        print(f"Validation dataset size: {len(self.validate_dataset)}")
+        print(f"Test dataset size: {len(self.test_dataset) if self.test_dataset is not None else 0}")
+        print('------------------------------------------------------')
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True,
