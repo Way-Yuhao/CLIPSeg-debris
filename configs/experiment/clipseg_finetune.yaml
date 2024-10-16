@@ -1,9 +1,9 @@
 # @package _global_
 
 trainer:
-  max_steps: 20000
+#  max_steps: 20000 # from clipseg
   precision: 16 # for amp set to true
-  max_epochs: 200
+  max_epochs: 1000
 
 callbacks:
   model_checkpoint:
