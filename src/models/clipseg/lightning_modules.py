@@ -9,6 +9,8 @@ from matplotlib import pyplot as plt
 from PIL import Image
 import wandb
 # from src.models.clipseg.clipseg import CLIPDensePredT
+from src.utils.multi_annotators_utils.utilis import segmentation_scores, generalized_energy_distance
+
 
 __author__ = 'Yuhao Liu'
 
@@ -135,6 +137,12 @@ class CLIPSegLitModule(LightningModule):
         pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
         pred_class = torch.argmax(pred, dim=0)
         gt_class = torch.argmax(data_y[1], dim=1)
+
+        # report metrics
+        dice_score = segmentation_scores(gt_class.cpu().detach(), pred_class.cpu().detach().numpy(),  self.num_classes)
+
+        self.log("val/dice", dice_score, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
+
 
         step_output = {"data_x": data_x, "data_y": data_y, "pred": pred, "gt_one_hot": data_y[1],
                        "pred_class": pred_class, "gt_class": gt_class}
