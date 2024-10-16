@@ -200,6 +200,8 @@ class CLIPSegLitModule(LightningModule):
     def log_img_pair(outputs: STEP_OUTPUT, mode: str):
         data_x, data_y, pred = outputs["data_x"], outputs["data_y"], outputs["pred"]
         shortened_prompt = data_x[1][0][10:]
+        if len(shortened_prompt) == 0:
+            shortened_prompt = 'no debris'
         # Create a new figure
         fig, axs = plt.subplots(1, 3, figsize=(10, 3))
         # First subplot for the query image

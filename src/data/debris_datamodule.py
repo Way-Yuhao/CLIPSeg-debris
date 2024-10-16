@@ -3,7 +3,7 @@ import os
 import torch
 from lightning import LightningDataModule
 # from lightning.pytorch.utilities.types import EVAL_DATALOADERS
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, Subset
 from src.data.components.debris import DebrisDataset
 
 
@@ -23,7 +23,7 @@ class DebrisDataModule(LightningDataModule):
         self.full_dataset = dataset
 
         self.save_hyperparameters(logger=False,
-                                  ignore=("dataset_dir", "debris_free_dataset_dir", "resize_to", "negative_prob"))
+                                  ignore=("dataset",))
         # to be defined elsewhere
         self.train_dataset = None
         self.validate_dataset = None
@@ -33,12 +33,14 @@ class DebrisDataModule(LightningDataModule):
         self.delete_dot_underscore_files(self.full_dataset.dataset_dir)
 
         # split dataset
-        self._split_dataset_random()
+        # self._split_dataset_random()
+        self._split_dataset_by_hurricane()
 
         self.print_dataset_stats() # print dataset stats
 
 
     def _split_dataset_random(self):
+        print('Splitting dataset randomly via 80/20 split...')
         # split dataset: 80% for training, 20% for validation
         train_size = int(0.8 * len(self.full_dataset))
         val_size = len(self.full_dataset) - train_size
@@ -48,8 +50,31 @@ class DebrisDataModule(LightningDataModule):
 
 
 
-    def split_dataset_by_hurricane(self):
-        raise NotImplementedError()
+    def _split_dataset_by_hurricane(self):
+        print('Splitting dataset by hurricane...')
+        if self.hparams.hurricane_id_ranges is None:
+            raise ValueError("hurricane_id_ranges must be provided to split the dataset by hurricane.")
+        hurricane_id_ranges = self.hparams.hurricane_id_ranges
+        # Initialize lists to store the indices of the train, val, and test sets
+        train_indices = []
+        val_indices = []
+        # Iterate over each image ID and determine which set it belongs to
+        for idx, img_id in enumerate(self.full_dataset.img_ids):
+            img_id_int = int(img_id)  # Convert image ID string to integer
+            if hurricane_id_ranges['ian'][0] <= img_id_int <= hurricane_id_ranges['ian'][1]:
+                train_indices.append(idx)  # Assign to 'ian' range (for training)
+            elif hurricane_id_ranges['ida'][0] <= img_id_int <= hurricane_id_ranges['ida'][1]:
+                val_indices.append(idx) # Assign to 'ida' range (for validation and test)
+            elif hurricane_id_ranges['ike'][0] <= img_id_int <= hurricane_id_ranges['ike'][1]:
+                train_indices.append(idx) # Assign to 'ike' range (for training)
+            else:
+                raise ValueError(f"Image ID {img_id} does not fall into any of the specified hurricane ranges.")
+        # Create train and validation datasets using the Subset class
+        self.train_dataset = Subset(self.full_dataset, train_indices)
+        self.validate_dataset = Subset(self.full_dataset, val_indices)
+        # If you need a separate test dataset, you can define it similarly
+        # In this case, validation and test set use the same "ida" range
+        # self.test_dataset = self.validate_dataset  # Use the same split for both, or create a different test split if needed
 
     def print_dataset_stats(self):
         print('-------------- Dataset Statistics --------------------')

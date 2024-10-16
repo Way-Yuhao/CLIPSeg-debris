@@ -5,6 +5,11 @@ batch_size: 64
 num_workers: 12
 pin_memory: false
 
+hurricane_id_ranges: # for split by hurricane
+    ian: [1, 12526] # 256 labeled, high-res, for train
+    ida: [12527, 20132] # 125 labeled, high-res, for val & test
+    ike: [20133, 22527] # 125 labeled, low-res, for train
+
 mask: "text_and_crop_blur_highlight352"
 
 # dataset parameters
