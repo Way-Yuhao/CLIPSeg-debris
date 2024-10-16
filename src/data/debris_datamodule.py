@@ -49,18 +49,17 @@ class DebrisDataModule(LightningDataModule):
                           num_workers=self.hparams.num_workers, pin_memory=self.hparams.pin_memory)
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.validate_dataset, batch_size=self.hparams.batch_size, shuffle=False,
-                          num_workers=self.hparams.num_workers, pin_memory=self.hparams.pin_memory)
+        return DataLoader(self.validate_dataset, batch_size=1, shuffle=False,
+                          num_workers=1, pin_memory=self.hparams.pin_memory)
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self.test_dataset, batch_size=self.hparams.batch_size, shuffle=False,
-                          num_workers=self.hparams.num_workers, pin_memory=self.hparams.pin_memory)
+        return DataLoader(self.test_dataset, batch_size=1, shuffle=False,
+                          num_workers=1, pin_memory=self.hparams.pin_memory)
 
     @staticmethod
     def delete_dot_underscore_files(directory: str):
         """
         Delete all files that start with ._ in the specified directory and its subdirectories.
-
         Args:
         directory (str): The root directory in which to search for ._ files.
         """

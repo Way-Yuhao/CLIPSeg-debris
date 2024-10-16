@@ -26,7 +26,7 @@ class CLIPSegLitModule(LightningModule):
         # to be defined elsewhere
         self.dataset_mask = None
         self.dataset_class = None
-
+        self.num_classes = None
         # debug
         # self.example_input_array = [torch.rand(4, 3, 256, 256), torch.rand(4, 512)]
 
@@ -44,6 +44,10 @@ class CLIPSegLitModule(LightningModule):
             # self.model.load_state_dict(new_state_dict)
         self.dataset_mask = self.trainer.datamodule.hparams.mask
         self.dataset_class = self.trainer.datamodule.train_dataset.__class__.__name__
+        self.num_classes = self.trainer.datamodule.full_dataset.num_classes
+        self.all_text_prompts = self.trainer.datamodule.full_dataset.text_prompts
+        self.all_densities = self.trainer.datamodule.full_dataset.densities
+        self.logger_class_labels = {i: prompt for i, prompt in enumerate(self.all_text_prompts)}
 
     def configure_optimizers(self):
         optimizer = self.hparams.optimizer(params=self.model.parameters())
@@ -126,19 +130,41 @@ class CLIPSegLitModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
         data_x, data_y = batch  # unpack
 
-        prompts = self.model.sample_prompts(data_x[1], prompt_list=('a photo of {}',))
-        pred, visual_q, _, _ = self.model(data_x[0], prompts, return_features=True)
+        prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
+        stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
+        pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
+        pred_class = torch.argmax(pred, dim=0)
+        gt_class = torch.argmax(data_y[1], dim=1)
 
-        # TODO: add metrics
-        # if metric_class is not None:
-        #     metric.add([pred], data_y)
-
-        # pred = model(data_x[0], prompts)
-        # loss = loss_fn(pred[0], data_y[0])
-        loss = self.loss_fn(pred, data_y[0])
-        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
-        step_output = {"pred": pred, "data_x": data_x, "data_y": data_y}
+        step_output = {"data_x": data_x, "data_y": data_y, "pred": pred, "gt_one_hot": data_y[1],
+                       "pred_class": pred_class, "gt_class": gt_class}
         return step_output
+
+        #
+        # prompts = self.model.sample_prompts(data_x[1], prompt_list=('a photo of {}',))
+        # pred, visual_q, _, _ = self.model(data_x[0], prompts, return_features=True)
+
+        # pred, visual_q = self.forward_all_prompts(data_x, data_y)
+        #
+        # # TODO: add metrics
+        # # if metric_class is not None:
+        # #     metric.add([pred], data_y)
+        #
+        # # pred = model(data_x[0], prompts)
+        # # loss = loss_fn(pred[0], data_y[0])
+        # loss = self.loss_fn(pred, data_y[0])
+        # self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
+        # step_output = {"pred": pred, "data_x": data_x, "data_y": data_y}
+        # return step_output
+
+    # def forward_all_prompts(self, data_x: torch.Tensor, data_y: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    #     prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
+    #     stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
+    #     pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
+    #     pred_class = torch.argmax(pred, dim=0)
+    #     gt_class = torch.argmax(data_y[1], dim=1)
+
+        # return pred, visual_q
 
     def on_train_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int) -> None:
         if batch_idx == 0:
@@ -146,7 +172,21 @@ class CLIPSegLitModule(LightningModule):
 
     def on_validation_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         if batch_idx == 0:
-            self.log_img_pair(outputs, mode='val')
+            # self.log_img_pair(outputs, mode='val')
+            self.log_predicted_class(outputs, mode='val')
+
+    def log_predicted_class(self, outputs: STEP_OUTPUT, mode: str):
+        pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
+        gt_class = outputs["gt_class"].squeeze().detach().cpu().numpy()
+        img = outputs["data_x"][0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
+        img_rescaled = (img - img.min()) / (img.max() - img.min())
+        masked_img = wandb.Image(img_rescaled,
+                                 masks={'predictions': {'mask_data': pred_class,
+                                                        'class_labels': self.logger_class_labels},
+                                        'ground_truth': {'mask_data': gt_class,
+                                                         'class_labels': self.logger_class_labels}})
+        wandb.log({f"{mode}/images": masked_img})
+
 
     @staticmethod
     def log_img_pair(outputs: STEP_OUTPUT, mode: str):

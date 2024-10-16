@@ -62,7 +62,7 @@ class DebrisOneHotDataset(Dataset):
         annotation = self.cvt_annotation_to_tensor(annotation)
 
         data_x = (img, ) + tuple(vis_s)
-        # FIXME: annotation_one_hot is not used used to be torch.zeros(0)
+        # FIXME: annotation_one_hot used to be torch.zeros(0)
         data_y = (annotation, annotation_one_hot, idx)
 
         return data_x, data_y
