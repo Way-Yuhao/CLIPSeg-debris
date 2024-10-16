@@ -174,57 +174,57 @@ class CLIPSegLitModule(LightningModule):
 
         # return pred, visual_q
 
-    def on_train_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int) -> None:
-        if batch_idx == 0:
-            self.log_img_pair(outputs, mode='train')
-
-    def on_validation_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
-        if batch_idx == 0:
-            # self.log_img_pair(outputs, mode='val')
-            self.log_predicted_class(outputs, mode='val')
-
-    def log_predicted_class(self, outputs: STEP_OUTPUT, mode: str):
-        pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
-        gt_class = outputs["gt_class"].squeeze().detach().cpu().numpy()
-        img = outputs["data_x"][0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
-        img_rescaled = (img - img.min()) / (img.max() - img.min())
-        masked_img = wandb.Image(img_rescaled,
-                                 masks={'predictions': {'mask_data': pred_class,
-                                                        'class_labels': self.logger_class_labels},
-                                        'ground_truth': {'mask_data': gt_class,
-                                                         'class_labels': self.logger_class_labels}})
-        wandb.log({f"{mode}/images": masked_img})
-
-
-    @staticmethod
-    def log_img_pair(outputs: STEP_OUTPUT, mode: str):
-        data_x, data_y, pred = outputs["data_x"], outputs["data_y"], outputs["pred"]
-        shortened_prompt = data_x[1][0][10:]
-        if len(shortened_prompt) == 0:
-            shortened_prompt = 'no debris'
-        # Create a new figure
-        fig, axs = plt.subplots(1, 3, figsize=(10, 3))
-        # First subplot for the query image
-        query_img_rescaled = data_x[0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
-        query_img_rescaled = (query_img_rescaled - query_img_rescaled.min()) / (
-                query_img_rescaled.max() - query_img_rescaled.min())
-        axs[0].imshow(query_img_rescaled)
-        axs[0].set_title(f'query image')
-        # Second subplot for the prediction
-        axs[1].imshow(pred[0][0, :, :].detach().cpu().numpy())
-        axs[1].set_title(f'prediction ({shortened_prompt})')
-        # Third subplot for the ground truth
-        axs[2].imshow(data_y[0][0, 0, :, :].detach().cpu().numpy())
-        axs[2].set_title(f'gt ({shortened_prompt})')
-        plt.tight_layout()
-        # Save the figure to a BytesIO object
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        # Close the figure
-        plt.close(fig)
-        # Convert buffer to a PIL Image
-        buf.seek(0)
-        img = Image.open(buf)
-        # Log the PIL Image to wandb
-        wandb.log({f"{mode}/images": wandb.Image(img)})
+    # def on_train_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int) -> None:
+    #     if batch_idx == 0:
+    #         self.log_img_pair(outputs, mode='train')
+    #
+    # def on_validation_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    #     if batch_idx == 0:
+    #         # self.log_img_pair(outputs, mode='val')
+    #         self.log_predicted_class(outputs, mode='val')
+    #
+    # def log_predicted_class(self, outputs: STEP_OUTPUT, mode: str):
+    #     pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
+    #     gt_class = outputs["gt_class"].squeeze().detach().cpu().numpy()
+    #     img = outputs["data_x"][0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
+    #     img_rescaled = (img - img.min()) / (img.max() - img.min())
+    #     masked_img = wandb.Image(img_rescaled,
+    #                              masks={'predictions': {'mask_data': pred_class,
+    #                                                     'class_labels': self.logger_class_labels},
+    #                                     'ground_truth': {'mask_data': gt_class,
+    #                                                      'class_labels': self.logger_class_labels}})
+    #     wandb.log({f"{mode}/images": masked_img})
+    #
+    #
+    # @staticmethod
+    # def log_img_pair(outputs: STEP_OUTPUT, mode: str):
+    #     data_x, data_y, pred = outputs["data_x"], outputs["data_y"], outputs["pred"]
+    #     shortened_prompt = data_x[1][0][10:]
+    #     if len(shortened_prompt) == 0:
+    #         shortened_prompt = 'no debris'
+    #     # Create a new figure
+    #     fig, axs = plt.subplots(1, 3, figsize=(10, 3))
+    #     # First subplot for the query image
+    #     query_img_rescaled = data_x[0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
+    #     query_img_rescaled = (query_img_rescaled - query_img_rescaled.min()) / (
+    #             query_img_rescaled.max() - query_img_rescaled.min())
+    #     axs[0].imshow(query_img_rescaled)
+    #     axs[0].set_title(f'query image')
+    #     # Second subplot for the prediction
+    #     axs[1].imshow(pred[0][0, :, :].detach().cpu().numpy())
+    #     axs[1].set_title(f'prediction ({shortened_prompt})')
+    #     # Third subplot for the ground truth
+    #     axs[2].imshow(data_y[0][0, 0, :, :].detach().cpu().numpy())
+    #     axs[2].set_title(f'gt ({shortened_prompt})')
+    #     plt.tight_layout()
+    #     # Save the figure to a BytesIO object
+    #     buf = io.BytesIO()
+    #     plt.savefig(buf, format='png')
+    #     # Close the figure
+    #     plt.close(fig)
+    #     # Convert buffer to a PIL Image
+    #     buf.seek(0)
+    #     img = Image.open(buf)
+    #     # Log the PIL Image to wandb
+    #     wandb.log({f"{mode}/images": wandb.Image(img)})
 

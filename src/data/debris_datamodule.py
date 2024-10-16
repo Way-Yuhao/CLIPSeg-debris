@@ -11,8 +11,7 @@ __author__ = 'Yuhao Liu'
 
 class DebrisDataModule(LightningDataModule):
 
-    def __init__(self, batch_size: int, num_workers: int, pin_memory: bool,
-                 dataset: Dataset,
+    def __init__(self, batch_size: int, num_workers: int, pin_memory: bool, dataset: Dataset,
                  *args, **kwargs):
         super().__init__()
 
@@ -38,7 +37,6 @@ class DebrisDataModule(LightningDataModule):
 
         self.print_dataset_stats() # print dataset stats
 
-
     def _split_dataset_random(self):
         print('Splitting dataset randomly via 80/20 split...')
         # split dataset: 80% for training, 20% for validation
@@ -49,9 +47,10 @@ class DebrisDataModule(LightningDataModule):
         self.test_dataset = None  # You can set this up as needed
 
 
-
     def _split_dataset_by_hurricane(self):
         print('Splitting dataset by hurricane...')
+        if self.hparams.remove_ike:
+            print('Removing hurricane "ike" from the dataset...')
         if self.hparams.hurricane_id_ranges is None:
             raise ValueError("hurricane_id_ranges must be provided to split the dataset by hurricane.")
         hurricane_id_ranges = self.hparams.hurricane_id_ranges
@@ -66,7 +65,8 @@ class DebrisDataModule(LightningDataModule):
             elif hurricane_id_ranges['ida'][0] <= img_id_int <= hurricane_id_ranges['ida'][1]:
                 val_indices.append(idx) # Assign to 'ida' range (for validation and test)
             elif hurricane_id_ranges['ike'][0] <= img_id_int <= hurricane_id_ranges['ike'][1]:
-                train_indices.append(idx) # Assign to 'ike' range (for training)
+                if not self.hparams.remove_ike:
+                    train_indices.append(idx) # Assign to 'ike' range (for training)
             else:
                 raise ValueError(f"Image ID {img_id} does not fall into any of the specified hurricane ranges.")
         # Create train and validation datasets using the Subset class

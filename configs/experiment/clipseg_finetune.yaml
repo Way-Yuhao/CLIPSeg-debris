@@ -3,6 +3,7 @@
 trainer:
   max_steps: 20000
   precision: 16 # for amp set to true
+  max_epochs: 200
 
 callbacks:
   model_checkpoint:

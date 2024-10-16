@@ -27,7 +27,8 @@ class DebrisOneHotDataset(Dataset):
         assert len(densities) == self.num_classes
         self.original_image_dir = p.join(dataset_dir, 'original')
         self.original_imgs = natsorted([p.join(self.original_image_dir, f)
-                                        for f in os.listdir(self.original_image_dir) if f.endswith('.png')])
+                                        for f in os.listdir(self.original_image_dir)
+                                        if f.endswith('.png') and '._' not in f])
         self.img_ids = [f.split('-')[2].split('_')[0] for f in self.original_imgs]
 
         self.annotation_dir = p.join(dataset_dir, 'segmentation_merged')

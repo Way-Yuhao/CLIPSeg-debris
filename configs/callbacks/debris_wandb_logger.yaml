@@ -1,0 +1,9 @@
+debris_wandb_logger:
+  _target_: src.utils.callbacks.debris_wandb_logger.DebrisWandbLogger
+  train_log_img_freq: 10
+  val_log_img_freq: 10
+  check_freq_via: 'epoch'
+  enable_save_ckpt: false
+  add_reference_artifact: false
+  show_train_batches: true
+  show_val_ids: ['012891','012968','013096','013650','013812','014123','014506','015241','016341']
