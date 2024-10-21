@@ -151,7 +151,7 @@ class DebrisPredictionDataset(Dataset):
 
     def __getitem__(self, idx):
         img_id = self.img_ids[idx]
-        img = self.find_input_img(img_id)
+        img, input_fname = self.find_input_img(img_id)
         img = self.cvt_img_to_tensor(img)
 
         # density, text_prompt = self.randomly_select_density()
@@ -169,8 +169,8 @@ class DebrisPredictionDataset(Dataset):
         # data_y = (annotation, annotation_one_hot, idx)
 
         data_x = (img, )
-        data_y = torch.tensor([])  # Use an empty tensor instead of None
-
+        empty_t = torch.tensor([])  # Use an empty tensor instead of None
+        data_y = (empty_t, empty_t, input_fname)
         return data_x, data_y
 
     def find_input_img(self, img_id: str):
@@ -182,7 +182,7 @@ class DebrisPredictionDataset(Dataset):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # img = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
         # img = self.normalize(img)
-        return img
+        return img, os.path.basename(img_files[0])
 
     def cvt_img_to_tensor(self, img: np.ndarray):
         t = torch.tensor(np.array(img).transpose(2, 0, 1), dtype=torch.float32)

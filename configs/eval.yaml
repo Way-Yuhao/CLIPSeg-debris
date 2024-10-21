@@ -3,6 +3,7 @@
 defaults:
   - data: debris_predict # choose datamodule with `test_dataloader()` for evaluation
   - model: clip_seg
+  - callbacks: debris_prediction_logger
   - logger: null
   - trainer: gpu
   - paths: default
@@ -20,4 +21,6 @@ ckpt_path: ${local.model_root_dir}/CLIPSeg/debris/CLIPSeg_union_ike_removed_3aix
 #ckpt_path: ${local.model_dir}/CLIPSeg_at_least_two_ike_included_qv35jh2y_epoch_959.ckpt
 
 name: debug_predict_example
-output_dir: ${local.prediction_output_dir}/${name}
+paths:
+  output_dir: ${local.prediction_output_dir}/${name}
+  log_dir: ${paths.output_dir}
