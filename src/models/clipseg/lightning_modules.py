@@ -148,83 +148,14 @@ class CLIPSegLitModule(LightningModule):
                        "pred_class": pred_class, "gt_class": gt_class}
         return step_output
 
-        #
-        # prompts = self.model.sample_prompts(data_x[1], prompt_list=('a photo of {}',))
-        # pred, visual_q, _, _ = self.model(data_x[0], prompts, return_features=True)
+    # def test_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
+    #     raise NotImplementedError()
 
-        # pred, visual_q = self.forward_all_prompts(data_x, data_y)
-        #
-        # # TODO: add metrics
-        # # if metric_class is not None:
-        # #     metric.add([pred], data_y)
-        #
-        # # pred = model(data_x[0], prompts)
-        # # loss = loss_fn(pred[0], data_y[0])
-        # loss = self.loss_fn(pred, data_y[0])
-        # self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
-        # step_output = {"pred": pred, "data_x": data_x, "data_y": data_y}
-        # return step_output
-
-    # def forward_all_prompts(self, data_x: torch.Tensor, data_y: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-    #     prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
-    #     stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
-    #     pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
-    #     pred_class = torch.argmax(pred, dim=0)
-    #     gt_class = torch.argmax(data_y[1], dim=1)
-
-        # return pred, visual_q
-
-    # def on_train_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int) -> None:
-    #     if batch_idx == 0:
-    #         self.log_img_pair(outputs, mode='train')
-    #
-    # def on_validation_batch_end(self, outputs: STEP_OUTPUT, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
-    #     if batch_idx == 0:
-    #         # self.log_img_pair(outputs, mode='val')
-    #         self.log_predicted_class(outputs, mode='val')
-    #
-    # def log_predicted_class(self, outputs: STEP_OUTPUT, mode: str):
-    #     pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
-    #     gt_class = outputs["gt_class"].squeeze().detach().cpu().numpy()
-    #     img = outputs["data_x"][0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
-    #     img_rescaled = (img - img.min()) / (img.max() - img.min())
-    #     masked_img = wandb.Image(img_rescaled,
-    #                              masks={'predictions': {'mask_data': pred_class,
-    #                                                     'class_labels': self.logger_class_labels},
-    #                                     'ground_truth': {'mask_data': gt_class,
-    #                                                      'class_labels': self.logger_class_labels}})
-    #     wandb.log({f"{mode}/images": masked_img})
-    #
-    #
-    # @staticmethod
-    # def log_img_pair(outputs: STEP_OUTPUT, mode: str):
-    #     data_x, data_y, pred = outputs["data_x"], outputs["data_y"], outputs["pred"]
-    #     shortened_prompt = data_x[1][0][10:]
-    #     if len(shortened_prompt) == 0:
-    #         shortened_prompt = 'no debris'
-    #     # Create a new figure
-    #     fig, axs = plt.subplots(1, 3, figsize=(10, 3))
-    #     # First subplot for the query image
-    #     query_img_rescaled = data_x[0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
-    #     query_img_rescaled = (query_img_rescaled - query_img_rescaled.min()) / (
-    #             query_img_rescaled.max() - query_img_rescaled.min())
-    #     axs[0].imshow(query_img_rescaled)
-    #     axs[0].set_title(f'query image')
-    #     # Second subplot for the prediction
-    #     axs[1].imshow(pred[0][0, :, :].detach().cpu().numpy())
-    #     axs[1].set_title(f'prediction ({shortened_prompt})')
-    #     # Third subplot for the ground truth
-    #     axs[2].imshow(data_y[0][0, 0, :, :].detach().cpu().numpy())
-    #     axs[2].set_title(f'gt ({shortened_prompt})')
-    #     plt.tight_layout()
-    #     # Save the figure to a BytesIO object
-    #     buf = io.BytesIO()
-    #     plt.savefig(buf, format='png')
-    #     # Close the figure
-    #     plt.close(fig)
-    #     # Convert buffer to a PIL Image
-    #     buf.seek(0)
-    #     img = Image.open(buf)
-    #     # Log the PIL Image to wandb
-    #     wandb.log({f"{mode}/images": wandb.Image(img)})
-
+    def predict_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
+        # data_x, data_y = batch  # TODO: unpack data accordingly
+        prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
+        stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
+        pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
+        pred_class = torch.argmax(pred, dim=0)
+        step_output = {'pred_class': pred_class}
+        return step_output
