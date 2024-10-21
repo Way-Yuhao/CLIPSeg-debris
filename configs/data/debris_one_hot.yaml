@@ -4,6 +4,7 @@ _target_: src.data.debris_datamodule.DebrisDataModule
 batch_size: 64
 num_workers: 12
 pin_memory: false
+merge_via: "at_least_two" # union
 
 hurricane_id_ranges: # for split by hurricane
     ian: [1, 12526] # 256 labeled, high-res, for train
@@ -16,7 +17,7 @@ mask: "text_and_crop_blur_highlight352"
 # dataset parameters
 dataset:
     _target_: src.data.components.debris_one_hot.DebrisOneHotDataset
-    dataset_dir: ${local.data_dir}/HIDeAI/multi_labeler_onehot/union
+    dataset_dir: ${local.data_dir}/HIDeAI/multi_labeler_onehot/${data.merge_via}
     resize_to: [256, 256]
     text_prompts: ['no debris', 'debris at low density', 'debris at high density']
     densities: ['no', 'low', 'high']
