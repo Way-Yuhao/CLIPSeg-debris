@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Tuple, List
 import os
 import torch
 from lightning import LightningDataModule
+from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 # from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, Subset
 from src.data.components.debris import DebrisDataset
@@ -21,8 +22,7 @@ class DebrisDataModule(LightningDataModule):
         # self.negative_prob = negative_prob
         self.full_dataset = dataset
 
-        self.save_hyperparameters(logger=False,
-                                  ignore=("dataset",))
+        self.save_hyperparameters(logger=False, ignore=("dataset",))
         # to be defined elsewhere
         self.train_dataset = None
         self.validate_dataset = None
@@ -34,7 +34,6 @@ class DebrisDataModule(LightningDataModule):
         # split dataset
         # self._split_dataset_random()
         self._split_dataset_by_hurricane()
-
         self.print_dataset_stats() # print dataset stats
 
     def _split_dataset_random(self):
@@ -113,6 +112,38 @@ class DebrisDataModule(LightningDataModule):
                         print(f"Failed to delete {file_path}: {e}")
 
 
+class DebrisPredictDataModule(LightningDataModule):
 
+    def __init__(self, batch_size: int, num_workers: int, pin_memory: bool, dataset: Dataset,
+                 *args, **kwargs):
+        super().__init__()
+
+        self.full_dataset = dataset
+        self.save_hyperparameters(logger=False, ignore=("dataset",))
+        self.predict_dataset = None
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        self.predict_dataset = self.full_dataset
+
+    def predict_dataloader(self) -> DataLoader:
+        return DataLoader(self.predict_dataset, batch_size=1, shuffle=False,
+                          num_workers=1, pin_memory=self.hparams.pin_memory)
+
+    @staticmethod
+    def delete_dot_underscore_files(directory: str):
+        """
+        Delete all files that start with ._ in the specified directory and its subdirectories.
+        Args:
+        directory (str): The root directory in which to search for ._ files.
+        """
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.startswith('._'): # Check if the file starts with ._
+                    file_path = os.path.join(root, file)
+                    try:
+                        os.remove(file_path)
+                        print(f"Deleted: {file_path}")
+                    except Exception as e:
+                        print(f"Failed to delete {file_path}: {e}")
 
 

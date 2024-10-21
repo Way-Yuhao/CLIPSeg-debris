@@ -1,18 +1,23 @@
 # @package _global_
 
 defaults:
-  - _self_
-  - data: mnist # choose datamodule with `test_dataloader()` for evaluation
-  - model: mnist
+  - data: debris_predict # choose datamodule with `test_dataloader()` for evaluation
+  - model: clip_seg
   - logger: null
-  - trainer: default
+  - trainer: gpu
   - paths: default
   - extras: default
   - hydra: default
+  - optional local: default
+  - _self_
 
 task_name: "eval"
 
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: ???
+ckpt_path: ${local.model_root_dir}/CLIPSeg/debris/CLIPSeg_union_ike_removed_3aix7ezw_epoch_970.ckpt
+#ckpt_path: ${local.model_dir}/CLIPSeg_at_least_two_ike_included_qv35jh2y_epoch_959.ckpt
+
+name: debug_predict_example
+output_dir: ${local.prediction_output_dir}/${name}

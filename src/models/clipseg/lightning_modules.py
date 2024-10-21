@@ -45,7 +45,10 @@ class CLIPSegLitModule(LightningModule):
             #     new_state_dict[new_key] = value
             # self.model.load_state_dict(new_state_dict)
         self.dataset_mask = self.trainer.datamodule.hparams.mask
-        self.dataset_class = self.trainer.datamodule.train_dataset.__class__.__name__
+        if hasattr(self.trainer.datamodule, 'train_dataset') and self.trainer.datamodule.train_dataset is not None:
+            self.dataset_class = self.trainer.datamodule.train_dataset.__class__.__name__
+        else:
+            self.dataset_class = self.trainer.datamodule.predict_dataset.__class__.__name__
         self.num_classes = self.trainer.datamodule.full_dataset.num_classes
         self.all_text_prompts = self.trainer.datamodule.full_dataset.text_prompts
         self.all_densities = self.trainer.datamodule.full_dataset.densities
@@ -152,7 +155,7 @@ class CLIPSegLitModule(LightningModule):
     #     raise NotImplementedError()
 
     def predict_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
-        # data_x, data_y = batch  # TODO: unpack data accordingly
+        data_x, data_y = batch  # TODO: unpack data accordingly
         prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
         stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
         pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)

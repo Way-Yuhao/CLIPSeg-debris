@@ -128,11 +128,74 @@ class DebrisOneHotDataset(Dataset):
             t = t.unsqueeze(0)
         return t
 
+class DebrisPredictionDataset(Dataset):
+    def __init__(self, dataset_dir: str, resize_to: tuple, text_prompts: List, densities: List,
+                 *args, **kwargs):
+        self.dataset_dir = dataset_dir
+        self.text_prompts = text_prompts
+        self.densities = densities
+        self.resize_to = resize_to
+
+        self.num_classes = len(text_prompts)
+        assert len(densities) == self.num_classes
+        self.original_image_dir = dataset_dir
+        self.original_imgs = natsorted([p.join(self.original_image_dir, f)
+                                        for f in os.listdir(self.original_image_dir)
+                                        if f.endswith('.png') and '._' not in f])
+        self.img_ids = [f.split('-')[2].split('_')[0] for f in self.original_imgs]
+        self.normalize = transforms.Normalize((0.57784108, 0.5724125, 0.5619426),
+                                              (0.24724819, 0.24302182, 0.23344601))
+
+    def __len__(self):
+        return len(self.img_ids)
+
+    def __getitem__(self, idx):
+        img_id = self.img_ids[idx]
+        img = self.find_input_img(img_id)
+        img = self.cvt_img_to_tensor(img)
+
+        # density, text_prompt = self.randomly_select_density()
+        # vis_prompt = self.find_visual_prompt(density)
+        # vis_prompt = self.cvt_img_to_tensor(vis_prompt)
+        # vis_s = [text_prompt, vis_prompt, True]
+        #
+        # annotation_one_hot = self.find_annotation_one_hot(img_id)
+        # annotation_one_hot = self.cvt_annotation_to_tensor(annotation_one_hot)
+        # annotation = self.find_annotation_for_density(img_id, density)
+        # annotation = self.cvt_annotation_to_tensor(annotation)
+
+        # data_x = (img, ) + tuple(vis_s)
+        # FIXME: annotation_one_hot used to be torch.zeros(0)
+        # data_y = (annotation, annotation_one_hot, idx)
+
+        data_x = (img, )
+        data_y = torch.tensor([])  # Use an empty tensor instead of None
+
+        return data_x, data_y
+
+    def find_input_img(self, img_id: str):
+        # find the input RGB image
+        img_files = [f for f in self.original_imgs if img_id in f]
+        assert len(img_files) == 1
+        img = cv2.imread(img_files[0], cv2.IMREAD_COLOR)
+        img = cv2.resize(img, self.resize_to, cv2.INTER_LINEAR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
+        # img = self.normalize(img)
+        return img
+
+    def cvt_img_to_tensor(self, img: np.ndarray):
+        t = torch.tensor(np.array(img).transpose(2, 0, 1), dtype=torch.float32)
+        t = t / 255.0
+        t = self.normalize(t)
+        return t
 
 if __name__ == '__main__':
-    d = DebrisOneHotDataset('/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/union',
-                            (256, 256),
-                            text_prompts=['no debris', 'debris at low density', 'debris at high density'],
-                            densities=['no', 'low', 'high'])
-    # get a sample
-    data_x, data_y = d[0]
+    # d = DebrisOneHotDataset('/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/union',
+    #                         (256, 256),
+    #                         text_prompts=['no debris', 'debris at low density', 'debris at high density'],
+    #                         densities=['no', 'low', 'high'])
+    # # get a sample
+    # data_x, data_y = d[0]
+
+    pass
