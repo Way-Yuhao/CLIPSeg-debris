@@ -7,6 +7,7 @@ pin_memory: false
 merge_via: "at_least_two" # union
 slit_dataset: "hurricane_test" # "random", "hurricane", "hurricane_test"
 remove_ike: false
+train_val_split_ratio: 0.8
 
 hurricane_id_ranges: # for split by hurricane
     ian: [1, 12526] # 256 labeled, high-res, for train

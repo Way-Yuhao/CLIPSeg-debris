@@ -1,10 +1,11 @@
 from typing import Any, Dict, Optional, Tuple, List
 import os
-import torch
+import numpy as np
 from lightning import LightningDataModule
 from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 # from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, Subset
+from natsort import natsorted
 from src.data.components.debris import DebrisDataset
 
 
@@ -93,28 +94,35 @@ class DebrisDataModule(LightningDataModule):
             raise ValueError("hurricane_id_ranges must be provided to split the dataset by hurricane.")
         hurricane_id_ranges = self.hparams.hurricane_id_ranges
         # Initialize lists to store the indices of the train, val, and test sets
-        train_val_indices = []
-        test_indices = []
+        train_indices, val_indices, test_indices = [], [], []
+        train_val_split_ratio = self.hparams.train_val_split_ratio
+
+
         # Iterate over each image ID and determine which set it belongs to
         for idx, img_id in enumerate(self.full_dataset.img_ids):
             img_id_int = int(img_id)  # Convert image ID string to integer
             if hurricane_id_ranges['ian'][0] <= img_id_int <= hurricane_id_ranges['ian'][1]:
-                train_val_indices.append(idx)  # Assign to 'ian' range (for training)
+                # assign to train or val set
+                if np.random.rand() < train_val_split_ratio:
+                    train_indices.append(idx)
+                else:
+                    val_indices.append(idx)
             elif hurricane_id_ranges['ida'][0] <= img_id_int <= hurricane_id_ranges['ida'][1]:
-                test_indices.append(idx)  # Assign to 'ida' range (for validation and test)
+                test_indices.append(idx)  # Assign to 'ida' range (for test)
             elif hurricane_id_ranges['ike'][0] <= img_id_int <= hurricane_id_ranges['ike'][1]:
                 if not self.hparams.remove_ike:
-                    train_val_indices.append(idx)  # Assign to 'ike' range (for training)
+                    # assign to train or val set
+                    if np.random.rand() < train_val_split_ratio:
+                        train_indices.append(idx)
+                    else:
+                        val_indices.append(idx)
             else:
                 raise ValueError(f"Image ID {img_id} does not fall into any of the specified hurricane ranges.")
-        # Create train and validation datasets using the Subset class
-        train_val_dataset = Subset(self.full_dataset, train_val_indices)
-        # Randomly split train_val_dataset into train and validation datasets (80/20 split)
-        train_size = int(0.8 * len(train_val_dataset))
-        val_size = len(train_val_dataset) - train_size
-        # line below expects seed to be set globally for reproducibility
-        self.train_dataset, self.validate_dataset = random_split(train_val_dataset, [train_size, val_size])
+        # Create train, validation, and test datasets using the Subset class
+        self.train_dataset = Subset(self.full_dataset, train_indices)
+        self.validate_dataset = Subset(self.full_dataset, val_indices)
         self.test_dataset = Subset(self.full_dataset, test_indices)
+
 
     def print_dataset_stats(self):
         print('-------------- Dataset Statistics --------------------')
