@@ -30,13 +30,21 @@ class DebrisDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         self.delete_dot_underscore_files(self.full_dataset.dataset_dir)
-
         # split dataset
-        # self._split_dataset_random()
-        self._split_dataset_by_hurricane()
+        if self.hparams.slit_dataset == "random":
+            self._split_dataset_random()
+        elif self.hparams.slit_dataset == "hurricane":
+            self._split_dataset_by_hurricane()
+        elif self.hparams.slit_dataset == "hurricane_test":
+            self._split_dataset_by_hurricane_test()
+        else:
+            raise ValueError(f"Invalid dataset split method: {self.hparams.slit_dataset}")
         self.print_dataset_stats() # print dataset stats
 
     def _split_dataset_random(self):
+        """
+        Split the dataset randomly into training and validation sets. No test set.
+        """
         print('Splitting dataset randomly via 80/20 split...')
         # split dataset: 80% for training, 20% for validation
         train_size = int(0.8 * len(self.full_dataset))
@@ -45,8 +53,10 @@ class DebrisDataModule(LightningDataModule):
         # If you need to setup a test dataset, you can do it here, but it's ignored as per your request
         self.test_dataset = None  # You can set this up as needed
 
-
     def _split_dataset_by_hurricane(self):
+        """
+        Split the dataset by hurricane, with no test set.
+        """
         print('Splitting dataset by hurricane...')
         if self.hparams.remove_ike:
             print('Removing hurricane "ike" from the dataset...')
@@ -71,9 +81,39 @@ class DebrisDataModule(LightningDataModule):
         # Create train and validation datasets using the Subset class
         self.train_dataset = Subset(self.full_dataset, train_indices)
         self.validate_dataset = Subset(self.full_dataset, val_indices)
-        # If you need a separate test dataset, you can define it similarly
-        # In this case, validation and test set use the same "ida" range
-        # self.test_dataset = self.validate_dataset  # Use the same split for both, or create a different test split if needed
+
+    def _split_dataset_by_hurricane_test(self):
+        """
+        Split the dataset by hurricane, with a test set.
+        """
+        print('Splitting dataset by hurricane with a test set...')
+        if self.hparams.remove_ike:
+            print('Removing hurricane "ike" from the dataset...')
+        if self.hparams.hurricane_id_ranges is None:
+            raise ValueError("hurricane_id_ranges must be provided to split the dataset by hurricane.")
+        hurricane_id_ranges = self.hparams.hurricane_id_ranges
+        # Initialize lists to store the indices of the train, val, and test sets
+        train_val_indices = []
+        test_indices = []
+        # Iterate over each image ID and determine which set it belongs to
+        for idx, img_id in enumerate(self.full_dataset.img_ids):
+            img_id_int = int(img_id)  # Convert image ID string to integer
+            if hurricane_id_ranges['ian'][0] <= img_id_int <= hurricane_id_ranges['ian'][1]:
+                train_val_indices.append(idx)  # Assign to 'ian' range (for training)
+            elif hurricane_id_ranges['ida'][0] <= img_id_int <= hurricane_id_ranges['ida'][1]:
+                test_indices.append(idx)  # Assign to 'ida' range (for validation and test)
+            elif hurricane_id_ranges['ike'][0] <= img_id_int <= hurricane_id_ranges['ike'][1]:
+                if not self.hparams.remove_ike:
+                    train_val_indices.append(idx)  # Assign to 'ike' range (for training)
+            else:
+                raise ValueError(f"Image ID {img_id} does not fall into any of the specified hurricane ranges.")
+        # Create train and validation datasets using the Subset class
+        train_val_dataset = Subset(self.full_dataset, train_val_indices)
+        # Randomly split train_val_dataset into train and validation datasets (80/20 split)
+        train_size = int(0.8 * len(train_val_dataset))
+        val_size = len(train_val_dataset) - train_size
+        self.train_dataset, self.validate_dataset = random_split(train_val_dataset, [train_size, val_size])
+        self.test_dataset = Subset(self.full_dataset, test_indices)
 
     def print_dataset_stats(self):
         print('-------------- Dataset Statistics --------------------')
