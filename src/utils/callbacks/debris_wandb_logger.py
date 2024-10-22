@@ -1,14 +1,13 @@
 import os
 import io
 from typing import Any, Dict, Optional, List
-# import torch
-# import torch.nn.functional as F
 from lightning import LightningModule, Trainer
+from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 import wandb
 from matplotlib import pyplot as plt
 from PIL import Image
-from lightning.pytorch.callbacks import Callback
+from collections import OrderedDict
 
 
 class DebrisWandbLogger(Callback):
@@ -81,11 +80,13 @@ class DebrisWandbLogger(Callback):
         gt_class = outputs["gt_class"].squeeze().detach().cpu().numpy()
         img = outputs["data_x"][0][0, :, :, :].detach().cpu().numpy().transpose(1, 2, 0)
         img_rescaled = (img - img.min()) / (img.max() - img.min())
-        masked_img = wandb.Image(img_rescaled,
-                                 masks={'predictions': {'mask_data': pred_class,
-                                                        'class_labels': self.logger_class_labels},
-                                        'ground_truth': {'mask_data': gt_class,
-                                                         'class_labels': self.logger_class_labels}})
+        masked_img = wandb.Image(
+            img_rescaled,
+            masks=OrderedDict([
+                ('predictions', {'mask_data': pred_class, 'class_labels': self.logger_class_labels}),
+                ('ground_truth', {'mask_data': gt_class, 'class_labels': self.logger_class_labels})
+            ])
+        )
         wandb.log({f"{mode}/images_{batch_idx}": masked_img})
 
     @staticmethod
