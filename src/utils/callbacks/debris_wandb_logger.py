@@ -1,21 +1,22 @@
 import os
 import io
 from typing import Any, Dict, Optional, List
+from collections import OrderedDict
 from lightning import LightningModule, Trainer
 from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 import wandb
 from matplotlib import pyplot as plt
 from PIL import Image
-from collections import OrderedDict
+import cv2
+from src.utils.clipseg_utils.gen_debris_vis_prompt import one_hot_encode_segmentation
 
 
 class DebrisWandbLogger(Callback):
 
     def __init__(self, train_log_img_freq: int = 10, val_log_img_freq: int = 10, check_freq_via: str = 'epoch',
                  enable_save_ckpt: bool = False, add_reference_artifact: bool = False,
-                 show_train_batches: bool = True, # show_val_batches: List[int] = None,
-                 show_val_ids: List[int] = None):
+                 show_train_batches: bool = True, show_val_ids: List[int] = None, save_dir: str = None):
         super().__init__()
         self.train_log_img_freq = train_log_img_freq
         self.val_log_img_freq = val_log_img_freq
@@ -24,6 +25,7 @@ class DebrisWandbLogger(Callback):
         self.add_reference_artifact = add_reference_artifact
         self.show_train_batches = show_train_batches
         self.show_val_ids = show_val_ids
+        self.save_dir = save_dir
 
         self.freqs = {'train_img': train_log_img_freq, 'val_img': val_log_img_freq}
         self.next_log_idx = {'train_img': 0, 'val_img': 0}
@@ -44,6 +46,11 @@ class DebrisWandbLogger(Callback):
         self.scan_for_val_ids(trainer)
 
         wandb.run.summary['logdir'] = trainer.default_root_dir
+
+        if self.save_dir is not None:
+            # wandb.run.summary['save_test_dir'] = self.save_dir
+            os.makedirs(os.path.join(self.save_dir, 'test_predictions'), exist_ok=True)
+            os.makedirs(os.path.join(self.save_dir, 'test_predictions_onehot'), exist_ok=True)
 
     def scan_for_val_ids(self, trainer: "pl.Trainer"):
         ids_remaining = self.show_val_ids
@@ -68,12 +75,17 @@ class DebrisWandbLogger(Callback):
     def on_validation_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
                                 batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         if batch_idx in self.show_val_at_idx and self._check_frequency(trainer, 'val_img', update=False):
-            # self.log_img_pair(outputs, mode='val')
             self.log_predicted_class(outputs, mode='val', batch_idx=batch_idx)
 
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         if trainer.current_epoch > 0:  # skip sanity check
             self._check_frequency(trainer, 'val_img', update=True)
+
+    def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
+                          batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        self.save_png(batch, outputs, batch_idx)
+        self.save_one_hot_rgb(batch, outputs, batch_idx)
+        self.log_predicted_class(outputs, mode='test', batch_idx=batch_idx)
 
     def log_predicted_class(self, outputs: STEP_OUTPUT, mode: str, batch_idx: int):
         pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
@@ -134,5 +146,19 @@ class DebrisWandbLogger(Callback):
             return True
         else:
             return False
+
+    def save_png(self, batch: Any, outputs: Any, batch_idx: int):
+        fname = os.path.join(self.save_dir, 'test_predictions', f"test_{batch_idx}.png")
+        pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
+        pred_class = pred_class.astype('uint8')
+        cv2.imwrite(fname, pred_class)
+
+    def save_one_hot_rgb(self, batch: Any, outputs: Any, batch_idx: int):
+        pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
+        seg_low = pred_class == 1
+        seg_high = pred_class == 2
+        one_hot_segmentation = one_hot_encode_segmentation(seg_low, seg_high)
+        fname = os.path.join(self.save_dir, 'test_predictions_onehot', f"test_{batch_idx}.png")
+        cv2.imwrite(fname, one_hot_segmentation)
 
 

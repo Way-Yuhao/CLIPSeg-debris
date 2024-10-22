@@ -151,8 +151,23 @@ class CLIPSegLitModule(LightningModule):
                        "pred_class": pred_class, "gt_class": gt_class}
         return step_output
 
-    # def test_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
-    #     raise NotImplementedError()
+    def test_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
+        data_x, data_y = batch  # unpack
+
+        prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
+        stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
+        pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
+        pred_class = torch.argmax(pred, dim=0)
+        gt_class = torch.argmax(data_y[1], dim=1)
+
+        # report metrics
+        dice_score = segmentation_scores(gt_class.cpu().detach(), pred_class.cpu().detach().numpy(), self.num_classes)
+
+        self.log("test/dice", dice_score, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
+
+        step_output = {"data_x": data_x, "data_y": data_y, "pred": pred, "gt_one_hot": data_y[1],
+                       "pred_class": pred_class, "gt_class": gt_class}
+        return step_output
 
     def predict_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
         data_x, data_y = batch  # TODO: unpack data accordingly

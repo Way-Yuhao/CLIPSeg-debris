@@ -4,12 +4,14 @@ trainer:
 #  max_steps: 20000 # from clipseg
   precision: 16 # for amp set to true
   max_epochs: 1000
+  check_val_every_n_epoch: 5
 
 callbacks:
   model_checkpoint:
     dirpath: ${paths.output_dir}/checkpoints
     filename: "epoch_{epoch:03d}"
-    monitor: "val/loss"
-    mode: "min"
+    monitor: "val/dice"
+    mode: "max"
     save_last: True
     auto_insert_metric_name: False
+    every_n_epochs: 10
