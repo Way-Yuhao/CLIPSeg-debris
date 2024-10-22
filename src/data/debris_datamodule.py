@@ -112,6 +112,7 @@ class DebrisDataModule(LightningDataModule):
         # Randomly split train_val_dataset into train and validation datasets (80/20 split)
         train_size = int(0.8 * len(train_val_dataset))
         val_size = len(train_val_dataset) - train_size
+        # line below expects seed to be set globally for reproducibility
         self.train_dataset, self.validate_dataset = random_split(train_val_dataset, [train_size, val_size])
         self.test_dataset = Subset(self.full_dataset, test_indices)
 

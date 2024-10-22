@@ -6,4 +6,5 @@ debris_wandb_logger:
   enable_save_ckpt: false
   add_reference_artifact: false
   show_train_batches: true
-  show_val_ids: ['012891','012968','013096','013650','013812','014123','014506','015241','016341']
+#  show_val_ids: ['012891','012968','013096','013650','013812','014123','014506','015241','016341'] # for ida
+  show_val_ids: ['012891','012968','013096','013650','013812','014123','014506','015241','016341'] # for ian
