@@ -6,9 +6,7 @@ from torch.nn import Softmax
 from lightning import LightningModule
 from lightning.pytorch.utilities.types import OptimizerLRScheduler, STEP_OUTPUT
 from matplotlib import pyplot as plt
-from PIL import Image
-import wandb
-# from src.models.clipseg.clipseg import CLIPDensePredT
+from sklearn.metrics import jaccard_score, precision_score, recall_score, f1_score
 from src.utils.multi_annotators_utils.utilis import segmentation_scores, generalized_energy_distance
 
 
@@ -138,14 +136,33 @@ class CLIPSegLitModule(LightningModule):
         prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
         stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
         pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
-        pred_class = torch.argmax(pred, dim=0)
-        gt_class = torch.argmax(data_y[1], dim=1)
+        pred_class = torch.argmax(pred, dim=0) # prediction
+        gt_class = torch.argmax(data_y[1], dim=1) # ground truth
 
-        # report metrics
+        # binary masks for debris_low and debris_high
+        mask_debris_low = (gt_class == 1).flatten().cpu().numpy()
+        pred_debris_low = (pred_class == 1).flatten().cpu().numpy()
+        mask_debris_high = (gt_class == 2).flatten().cpu().numpy()
+        pred_debris_high = (pred_class == 2).flatten().cpu().numpy()
+
+        ## report metrics
+        # IoU, foreground
+        iou_debris_low = jaccard_score(mask_debris_low, pred_debris_low, zero_division=0)
+        iou_debris_high = jaccard_score(mask_debris_high, pred_debris_high, zero_division=0)
+        # precision vs. recall, foreground
+        precision_debris_low = precision_score(mask_debris_low, pred_debris_low, zero_division=0)
+        recall_debris_low = recall_score(mask_debris_low, pred_debris_low, zero_division=0)
+        precision_debris_high = precision_score(mask_debris_high, pred_debris_high, zero_division=0)
+        recall_debris_high = recall_score(mask_debris_high, pred_debris_high, zero_division=0)
+        # dice
         dice_score = segmentation_scores(gt_class.cpu().detach(), pred_class.cpu().detach().numpy(),  self.num_classes)
-
+        self.log("val/iou_debris_low", iou_debris_low, on_epoch=True, prog_bar=True)
+        self.log("val/iou_debris_high", iou_debris_high, on_epoch=True, prog_bar=True)
+        self.log("val/precision_debris_low", precision_debris_low, on_epoch=True, prog_bar=True)
+        self.log("val/recall_debris_low", recall_debris_low, on_epoch=True, prog_bar=True)
+        self.log("val/precision_debris_high", precision_debris_high, on_epoch=True, prog_bar=True)
+        self.log("val/recall_debris_high", recall_debris_high, on_epoch=True, prog_bar=True)
         self.log("val/dice", dice_score, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
-
 
         step_output = {"data_x": data_x, "data_y": data_y, "pred": pred, "gt_one_hot": data_y[1],
                        "pred_class": pred_class, "gt_class": gt_class}
