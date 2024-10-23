@@ -80,6 +80,7 @@ class DebrisWandbLogger(Callback):
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         if trainer.current_epoch > 0:  # skip sanity check
             self._check_frequency(trainer, 'val_img', update=True)
+        wandb.log({}, commit=True) # sync wandb step for all logs in this callhook
 
     def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
                           batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
@@ -99,7 +100,7 @@ class DebrisWandbLogger(Callback):
                 ('ground_truth', {'mask_data': gt_class, 'class_labels': self.logger_class_labels})
             ])
         )
-        wandb.log({f"{mode}/images_{batch_idx}": masked_img})
+        wandb.log({f"{mode}/images_{batch_idx}": masked_img}, commit=False)
 
     @staticmethod
     def log_img_pair(outputs: STEP_OUTPUT, mode: str, batch_idx: int):

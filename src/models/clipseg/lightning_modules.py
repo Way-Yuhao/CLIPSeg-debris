@@ -27,6 +27,10 @@ class CLIPSegLitModule(LightningModule):
         self.dataset_mask = None
         self.dataset_class = None
         self.num_classes = None
+        self.all_text_prompts = None
+        self.all_densities = None
+        self.one_hot_labels = None
+        self.logger_class_labels = None
         # debug
         # self.example_input_array = [torch.rand(4, 3, 256, 256), torch.rand(4, 512)]
 
@@ -35,13 +39,6 @@ class CLIPSegLitModule(LightningModule):
             print(f'Loading pretrained model from {self.hparams.pretrained_clipseg_ckpt}')
             loaded_state_dict = torch.load(self.hparams.pretrained_clipseg_ckpt)
             self.model.load_state_dict(loaded_state_dict, strict=False)
-            # loaded_state_dict = checkpoint['state_dict']
-            # new_state_dict = {}
-            # prefix = 'clip_model.'
-            # for key, value in loaded_state_dict.items():
-            #     new_key = prefix + key
-            #     new_state_dict[new_key] = value
-            # self.model.load_state_dict(new_state_dict)
         self.dataset_mask = self.trainer.datamodule.hparams.mask
         if hasattr(self.trainer.datamodule, 'train_dataset') and self.trainer.datamodule.train_dataset is not None:
             self.dataset_class = self.trainer.datamodule.train_dataset.__class__.__name__
@@ -51,6 +48,7 @@ class CLIPSegLitModule(LightningModule):
         self.all_text_prompts = self.trainer.datamodule.full_dataset.text_prompts
         self.all_densities = self.trainer.datamodule.full_dataset.densities
         self.logger_class_labels = {i: prompt for i, prompt in enumerate(self.all_text_prompts)}
+        self.one_hot_labels = [i for i in range(self.num_classes)]
 
     def configure_optimizers(self):
         optimizer = self.hparams.optimizer(params=self.model.parameters())
@@ -138,31 +136,7 @@ class CLIPSegLitModule(LightningModule):
         pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
         pred_class = torch.argmax(pred, dim=0) # prediction
         gt_class = torch.argmax(data_y[1], dim=1) # ground truth
-
-        # binary masks for debris_low and debris_high
-        mask_debris_low = (gt_class == 1).flatten().cpu().numpy()
-        pred_debris_low = (pred_class == 1).flatten().cpu().numpy()
-        mask_debris_high = (gt_class == 2).flatten().cpu().numpy()
-        pred_debris_high = (pred_class == 2).flatten().cpu().numpy()
-
-        ## report metrics
-        # IoU, foreground
-        iou_debris_low = jaccard_score(mask_debris_low, pred_debris_low, zero_division=0)
-        iou_debris_high = jaccard_score(mask_debris_high, pred_debris_high, zero_division=0)
-        # precision vs. recall, foreground
-        precision_debris_low = precision_score(mask_debris_low, pred_debris_low, zero_division=0)
-        recall_debris_low = recall_score(mask_debris_low, pred_debris_low, zero_division=0)
-        precision_debris_high = precision_score(mask_debris_high, pred_debris_high, zero_division=0)
-        recall_debris_high = recall_score(mask_debris_high, pred_debris_high, zero_division=0)
-        # dice
-        dice_score = segmentation_scores(gt_class.cpu().detach(), pred_class.cpu().detach().numpy(),  self.num_classes)
-        self.log("val/iou_debris_low", iou_debris_low, on_epoch=True, prog_bar=True)
-        self.log("val/iou_debris_high", iou_debris_high, on_epoch=True, prog_bar=True)
-        self.log("val/precision_debris_low", precision_debris_low, on_epoch=True, prog_bar=True)
-        self.log("val/recall_debris_low", recall_debris_low, on_epoch=True, prog_bar=True)
-        self.log("val/precision_debris_high", precision_debris_high, on_epoch=True, prog_bar=True)
-        self.log("val/recall_debris_high", recall_debris_high, on_epoch=True, prog_bar=True)
-        self.log("val/dice", dice_score, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
+        self.compute_metric_single_class_2(pred_class, gt_class, 'val')
 
         step_output = {"data_x": data_x, "data_y": data_y, "pred": pred, "gt_one_hot": data_y[1],
                        "pred_class": pred_class, "gt_class": gt_class}
@@ -194,3 +168,53 @@ class CLIPSegLitModule(LightningModule):
         pred_class = torch.argmax(pred, dim=0)
         step_output = {'pred_class': pred_class}
         return step_output
+
+    def compute_metric_single_class_2(self, pred_class: torch.Tensor, gt_class: torch.Tensor, stage: str) -> torch.Tensor:
+        pred_class = pred_class.flatten().cpu().numpy()
+        gt_class = gt_class.flatten().cpu().numpy()
+
+        iou_per_class = jaccard_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
+        iou = jaccard_score(gt_class, pred_class, zero_division=1, average='macro', labels=self.one_hot_labels)
+        precision_per_class = precision_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
+        recall_per_class = recall_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
+        dice_score = segmentation_scores(gt_class, pred_class, self.num_classes)
+
+
+        self.log(f"{stage}/iou_no_debris", iou_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/iou_debris_low", iou_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/iou_debris_high", iou_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/iou_macro", iou, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/precision_no_debris", precision_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/precision_debris_low", precision_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/precision_debris_high", precision_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/recall_no_debris", recall_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/recall_debris_low", recall_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/recall_debris_high", recall_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/dice", dice_score, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+
+
+    def compute_metric_single_class(self, pred_class: torch.Tensor, gt_class: torch.Tensor, stage: str) -> torch.Tensor:
+        # binary masks for debris_low and debris_high
+        mask_debris_low = (gt_class == 1).flatten().cpu().numpy()
+        pred_debris_low = (pred_class == 1).flatten().cpu().numpy()
+        mask_debris_high = (gt_class == 2).flatten().cpu().numpy()
+        pred_debris_high = (pred_class == 2).flatten().cpu().numpy()
+
+        ## report metrics
+        # IoU, foreground
+        iou_debris_low = jaccard_score(mask_debris_low, pred_debris_low, zero_division=0)
+        iou_debris_high = jaccard_score(mask_debris_high, pred_debris_high, zero_division=0)
+        # precision vs. recall, foreground
+        precision_debris_low = precision_score(mask_debris_low, pred_debris_low, zero_division=0)
+        recall_debris_low = recall_score(mask_debris_low, pred_debris_low, zero_division=0)
+        precision_debris_high = precision_score(mask_debris_high, pred_debris_high, zero_division=0)
+        recall_debris_high = recall_score(mask_debris_high, pred_debris_high, zero_division=0)
+        # dice
+        dice_score = segmentation_scores(gt_class.cpu().detach(), pred_class.cpu().detach().numpy(), self.num_classes)
+        self.log("val/iou_debris_low", iou_debris_low, on_epoch=True, prog_bar=True)
+        self.log("val/iou_debris_high", iou_debris_high, on_epoch=True, prog_bar=True)
+        self.log("val/precision_debris_low", precision_debris_low, on_epoch=True, prog_bar=True)
+        self.log("val/recall_debris_low", recall_debris_low, on_epoch=True, prog_bar=True)
+        self.log("val/precision_debris_high", precision_debris_high, on_epoch=True, prog_bar=True)
+        self.log("val/recall_debris_high", recall_debris_high, on_epoch=True, prog_bar=True)
+        self.log("val/dice", dice_score, on_step=False, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
