@@ -151,10 +151,7 @@ class CLIPSegLitModule(LightningModule):
         pred_class = torch.argmax(pred, dim=0)
         gt_class = torch.argmax(data_y[1], dim=1)
 
-        # report metrics
-        dice_score = segmentation_scores(gt_class.cpu().detach(), pred_class.cpu().detach().numpy(), self.num_classes)
-
-        self.log("test/dice", dice_score, on_step=False, on_epoch=True, prog_bar=True, batch_size=data_x[0].shape[0])
+        self.compute_metric_single_class_2(pred_class, gt_class, 'test')
 
         step_output = {"data_x": data_x, "data_y": data_y, "pred": pred, "gt_one_hot": data_y[1],
                        "pred_class": pred_class, "gt_class": gt_class}
@@ -178,7 +175,6 @@ class CLIPSegLitModule(LightningModule):
         precision_per_class = precision_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
         recall_per_class = recall_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
         dice_score = segmentation_scores(gt_class, pred_class, self.num_classes)
-
 
         self.log(f"{stage}/iou_no_debris", iou_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/iou_debris_low", iou_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
