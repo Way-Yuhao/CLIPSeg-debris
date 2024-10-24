@@ -1,0 +1,10 @@
+# @package _global_
+
+defaults:
+  - clipseg_finetune
+  - _self_
+
+loss_fn:
+  _target_: src.utils.clipseg_utils.focal_loss.FocalLoss
+  alpha: 0.25
+  gamma: 2.0

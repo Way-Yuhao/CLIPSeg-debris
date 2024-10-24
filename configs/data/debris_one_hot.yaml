@@ -2,7 +2,7 @@
 
 _target_: src.data.debris_datamodule.DebrisDataModule
 batch_size: 64
-num_workers: 12
+num_workers: 24
 pin_memory: false
 merge_via: "at_least_two" # union
 slit_dataset: "hurricane_test" # "random", "hurricane", "hurricane_test"

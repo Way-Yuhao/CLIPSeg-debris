@@ -1,9 +1,11 @@
 import torch
 import torch.nn as nn
 
+__author__ = 'Yuhao Liu'
+
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=1, gamma=2, reduction='mean'):
-        super(FocalLoss, self).__init__()
+    def __init__(self, alpha: float, gamma: float, reduction: str='mean'):
+        super().__init__()
         self.alpha = alpha
         self.gamma = gamma
         self.reduction = reduction
