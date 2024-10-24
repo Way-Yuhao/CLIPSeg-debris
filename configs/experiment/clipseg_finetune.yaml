@@ -3,7 +3,7 @@
 trainer:
 #  max_steps: 20000 # from clipseg
   precision: 16 # for amp set to true
-  max_epochs: 1000
+  max_epochs: 2000
   check_val_every_n_epoch: 5
 
 callbacks:
@@ -12,6 +12,6 @@ callbacks:
     filename: "epoch_{epoch:03d}"
     monitor: "val/dice"
     mode: "max"
-    save_last: True
-    auto_insert_metric_name: False
+    save_last: true
+    auto_insert_metric_name: false
     every_n_epochs: 10
