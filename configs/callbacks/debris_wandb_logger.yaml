@@ -10,3 +10,4 @@ debris_wandb_logger:
   show_val_ids: ['000427','000478','000496','003056','004246','006894','006977','020810','020974'] # ian + ike
 #  show_val_ids: ['000427','000478','000496','003056','004246','006894','006977'] # ian
   save_dir: ${paths.output_dir}
+  log_test_on_wandb: false

@@ -16,7 +16,8 @@ class DebrisWandbLogger(Callback):
 
     def __init__(self, train_log_img_freq: int = 10, val_log_img_freq: int = 10, check_freq_via: str = 'epoch',
                  enable_save_ckpt: bool = False, add_reference_artifact: bool = False,
-                 show_train_batches: bool = True, show_val_ids: List[int] = None, save_dir: str = None):
+                 show_train_batches: bool = True, show_val_ids: List[int] = None, save_dir: str = None,
+                 log_test_on_wandb: bool = False):
         super().__init__()
         self.train_log_img_freq = train_log_img_freq
         self.val_log_img_freq = val_log_img_freq
@@ -26,6 +27,7 @@ class DebrisWandbLogger(Callback):
         self.show_train_batches = show_train_batches
         self.show_val_ids = show_val_ids
         self.save_dir = save_dir
+        self.log_test_on_wandb = log_test_on_wandb
 
         self.freqs = {'train_img': train_log_img_freq, 'val_img': val_log_img_freq}
         self.next_log_idx = {'train_img': 0, 'val_img': 0}

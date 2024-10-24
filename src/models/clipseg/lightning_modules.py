@@ -7,7 +7,7 @@ from lightning import LightningModule
 from lightning.pytorch.utilities.types import OptimizerLRScheduler, STEP_OUTPUT
 from matplotlib import pyplot as plt
 from sklearn.metrics import jaccard_score, precision_score, recall_score, f1_score
-from src.utils.multi_annotators_utils.utilis import segmentation_scores, generalized_energy_distance
+# from src.utils.multi_annotators_utils.utilis import segmentation_scores, generalized_energy_distance
 
 
 __author__ = 'Yuhao Liu'
@@ -19,7 +19,7 @@ class CLIPSegLitModule(LightningModule):
                  loss_fn: torch.nn.Module, scheduler: OptimizerLRScheduler, compile: bool = False,
                  *args, **kwargs):
         super().__init__()
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=['model'])
         self.model = model
         self.loss_fn = loss_fn
 
@@ -174,7 +174,11 @@ class CLIPSegLitModule(LightningModule):
         iou = jaccard_score(gt_class, pred_class, zero_division=1, average='macro', labels=self.one_hot_labels)
         precision_per_class = precision_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
         recall_per_class = recall_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
-        dice_score = segmentation_scores(gt_class, pred_class, self.num_classes)
+        f1_score_per_class = f1_score(gt_class, pred_class, zero_division=1, average=None, labels=self.one_hot_labels)
+        f1 = f1_score(gt_class, pred_class, zero_division=1, average='macro', labels=self.one_hot_labels)
+        f1_debris_only = f1_score(gt_class, pred_class, zero_division=1, average='macro', labels=self.one_hot_labels[1:])
+        dice_debris = segmentation_scores(gt_class, pred_class, self.num_classes, filter_background=True)
+        dice = segmentation_scores(gt_class, pred_class, self.num_classes, filter_background=False)
 
         self.log(f"{stage}/iou_no_debris", iou_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/iou_debris_low", iou_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
@@ -186,7 +190,13 @@ class CLIPSegLitModule(LightningModule):
         self.log(f"{stage}/recall_no_debris", recall_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/recall_debris_low", recall_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/recall_debris_high", recall_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/dice", dice_score, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/f1_score_no_debris", f1_score_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/f1_score_debris_low", f1_score_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/f1_score_debris_high", f1_score_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/f1_macro", f1, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/f1_macro_debris_only", f1_debris_only, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/dice_debris", dice_debris, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/dice", dice, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
 
 
     def compute_metric_single_class(self, pred_class: torch.Tensor, gt_class: torch.Tensor, stage: str) -> torch.Tensor:
@@ -214,3 +224,41 @@ class CLIPSegLitModule(LightningModule):
         self.log("val/precision_debris_high", precision_debris_high, on_epoch=True, prog_bar=True)
         self.log("val/recall_debris_high", recall_debris_high, on_epoch=True, prog_bar=True)
         self.log("val/dice", dice_score, on_step=False, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+
+
+def segmentation_scores(label_trues, label_preds, n_class, filter_background=True):
+    '''
+    Computes the Dice score for segmentation tasks.
+
+    :param label_trues: Ground truth labels (tensor-like, [1, h, w])
+    :param label_preds: Predicted labels (tensor-like, [1, h, w])
+    :param n_class: Total number of classes (including background)
+    :param filter_background: Boolean flag to exclude background class (0)
+    :return: Mean Dice score (optionally excluding background)
+    '''
+    assert len(label_trues) == len(label_preds)
+
+    # Convert to numpy arrays and flatten
+    label_trues = np.asarray(label_trues, dtype='int8').copy().flatten()
+    label_preds = np.asarray(label_preds, dtype='int8').copy().flatten()
+
+    # Apply mask if filtering background class
+    if filter_background:
+        mask = label_trues > 0  # Keep only non-background pixels
+        label_trues = label_trues[mask]
+        label_preds = label_preds[mask]
+
+    # Compute Dice score for each class
+    dice_scores = []
+    for cls in range(1 if filter_background else 0, n_class):
+        pred_mask = (label_preds == cls)
+        true_mask = (label_trues == cls)
+
+        intersection = np.sum(pred_mask & true_mask)
+        union = np.sum(pred_mask) + np.sum(true_mask)
+
+        dice = (2 * intersection + 1e-6) / (union + 1e-6)  # Avoid division by zero
+        dice_scores.append(dice)
+
+    # Return the mean Dice score across all relevant classes
+    return np.mean(dice_scores)
