@@ -161,8 +161,8 @@ class CLIPSegLitModule(LightningModule):
         data_x, data_y = batch  # TODO: unpack data accordingly
         prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
         stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
-        pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True)
-        pred_class = torch.argmax(pred, dim=0)
+        pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True) # pred : [3, h, w]
+        pred_class = torch.argmax(pred, dim=0)  #pred_class: [h, w]
         step_output = {'pred_class': pred_class}
         return step_output
 
