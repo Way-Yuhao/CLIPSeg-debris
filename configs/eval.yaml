@@ -17,10 +17,16 @@ task_name: "eval"
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: ${local.model_root_dir}/CLIPSeg/debris/CLIPSeg_union_ike_removed_3aix7ezw_epoch_970.ckpt
+#ckpt_path: ${local.model_root_dir}/CLIPSeg/debris/CLIPSeg_union_ike_removed_3aix7ezw_epoch_970.ckpt
 #ckpt_path: ${local.model_dir}/CLIPSeg_at_least_two_ike_included_qv35jh2y_epoch_959.ckpt
+#ckpt_path: ${local.log_dir}/2024-10-24_22-47-03/checkpoints/epoch_429.ckpt  # bce union
+#ckpt_path: ${local.log_dir}/2024-10-24_22-47-13/checkpoints/epoch_1479.ckpt  # focal union
+#ckpt_path: ${local.log_dir}/2024-10-25_20-21-24/checkpoints/epoch_699.ckpt # bce, union, no negative
+#ckpt_path: ${local.log_dir}/2024-10-28_12-55-43/checkpoints/epoch_889.ckpt # bce, union, 32 negative
+ckpt_path: ${local.log_dir}/2024-10-28_16-19-37/checkpoints/epoch_529.ckpt # bce, kooshan, no negative
 
-name: debug_predict_example
+
+name: debug_predict_no_detection_kooshan_ckpt
 paths:
   output_dir: ${local.prediction_output_dir}/${name}
   log_dir: ${paths.output_dir}

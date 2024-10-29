@@ -158,7 +158,7 @@ class CLIPSegLitModule(LightningModule):
         return step_output
 
     def predict_step(self, batch: Any, batch_idx: int) -> STEP_OUTPUT:
-        data_x, data_y = batch  # TODO: unpack data accordingly
+        data_x, data_y = batch
         prompts = self.model.sample_prompts(self.all_text_prompts, prompt_list=('a photo of {}',))
         stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
         pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True) # pred : [3, h, w]
@@ -227,7 +227,7 @@ class CLIPSegLitModule(LightningModule):
 
 
 def segmentation_scores(label_trues, label_preds, n_class, filter_background=True):
-    '''
+    """
     Computes the Dice score for segmentation tasks.
 
     :param label_trues: Ground truth labels (tensor-like, [1, h, w])
@@ -235,7 +235,7 @@ def segmentation_scores(label_trues, label_preds, n_class, filter_background=Tru
     :param n_class: Total number of classes (including background)
     :param filter_background: Boolean flag to exclude background class (0)
     :return: Mean Dice score (optionally excluding background)
-    '''
+    """
     assert len(label_trues) == len(label_preds)
 
     # Convert to numpy arrays and flatten

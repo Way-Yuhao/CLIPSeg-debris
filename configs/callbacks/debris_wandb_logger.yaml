@@ -7,7 +7,8 @@ debris_wandb_logger:
   add_reference_artifact: false
   show_train_batches: true
 #  show_val_ids: ['012891','012968','013096','013650','013812','014123','014506','015241','016341'] # for ida
-  show_val_ids: ['000427','000478','000496','003056','004246','006894','006977','020810','020974'] # ian + ike
+#  show_val_ids: ['000427','000478','000496','003056','004246','006894','006977','020810','020974'] # ian + ike
 #  show_val_ids: ['000427','000478','000496','003056','004246','006894','006977'] # ian
+  show_val_ids: ['000149','000182','000257','000325','010568'] # no negative, ian + ike
   save_dir: ${paths.output_dir}
   log_test_on_wandb: false

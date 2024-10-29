@@ -133,15 +133,18 @@ class DebrisDataModule(LightningDataModule):
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True,
-                          num_workers=self.hparams.num_workers, pin_memory=self.hparams.pin_memory)
+                          num_workers=self.hparams.num_workers, pin_memory=self.hparams.pin_memory,
+                          persistent_workers=self.hparams.persistent_workers)
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(self.validate_dataset, batch_size=1, shuffle=False,
-                          num_workers=1, pin_memory=self.hparams.pin_memory)
+                          num_workers=1, pin_memory=self.hparams.pin_memory,
+                          persistent_workers=self.hparams.persistent_workers)
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(self.test_dataset, batch_size=1, shuffle=False,
-                          num_workers=1, pin_memory=self.hparams.pin_memory)
+                          num_workers=1, pin_memory=self.hparams.pin_memory,
+                          persistent_workers=self.hparams.persistent_workers)
 
     @staticmethod
     def delete_dot_underscore_files(directory: str):

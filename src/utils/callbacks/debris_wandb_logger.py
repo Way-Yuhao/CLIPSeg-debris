@@ -39,7 +39,6 @@ class DebrisWandbLogger(Callback):
         self.logger_class_labels = None
         self.show_val_at_idx = []
 
-
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
         self.num_classes = trainer.datamodule.full_dataset.num_classes
         self.all_text_prompts = trainer.datamodule.full_dataset.text_prompts
@@ -67,7 +66,6 @@ class DebrisWandbLogger(Callback):
                 break
         if len(ids_remaining) > 0:
             raise ValueError(f"Could not find validation image {ids_remaining}")
-
 
     def on_train_batch_end(self, trainer: Trainer, pl_module: LightningModule, outputs: Any,
                            batch: Any, batch_idx: int) -> None:

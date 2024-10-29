@@ -164,13 +164,13 @@ def generate_one_hot_for_negative(rgb_img_dir: str, seg_output_dir: str):
 
 
 if __name__ == '__main__':
-    # rgb_img_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/at_least_two/original'
-    # segmentation_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/at_least_two/segmentation_hl'
-    # vis_prompt_output_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/at_least_two/vis_prompts_hl'
-    # merged_annotations = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/at_least_two/segmentation_merged'
-    # generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
+    rgb_img_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_only_no_negative/original'
+    segmentation_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_only_no_negative/segmentation_hl'
+    vis_prompt_output_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_only_no_negative/vis_prompts_hl'
+    merged_annotations = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_only_no_negative/segmentation_merged'
     # generated_merged_annotations(rgb_img_dir, segmentation_dir, merged_annotations)
+    generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
 
-    negative_rgb_dir = '/home/yuhaoliu/Data/HIDeAI/negative_955/rgb'
-    negative_seg_dir = '/home/yuhaoliu/Data/HIDeAI/negative_955/one_hot_seg'
-    generate_one_hot_for_negative(negative_rgb_dir, negative_seg_dir)
+    # negative_rgb_dir = '/home/yuhaoliu/Data/HIDeAI/negative_33/rgb'
+    # negative_seg_dir = '/home/yuhaoliu/Data/HIDeAI/negative_33/one_hot_seg'
+    # generate_one_hot_for_negative(negative_rgb_dir, negative_seg_dir)
