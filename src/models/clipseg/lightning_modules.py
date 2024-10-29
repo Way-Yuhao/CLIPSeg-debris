@@ -80,10 +80,10 @@ class CLIPSegLitModule(LightningModule):
             text_cond = self.model.compute_conditional(prompts)
             if self.model.__class__.__name__ == 'CLIPDensePredTMasked':
                 # when mask=='separate'
-                visual_s_cond, _, _ = self.model.visual_forward_masked(data_x[2].cuda(), data_x[3].cuda())
+                visual_s_cond, _, _ = self.model.visual_forward_masked(data_x[2].to(self.device), data_x[3].to(self.device))
             else:
                 # data_x[2] = visual prompt
-                visual_s_cond, _, _ = self.model.visual_forward(data_x[2].cuda())
+                visual_s_cond, _, _ = self.model.visual_forward(data_x[2].to(self.device))
             # end of autocast
 
             max_txt = self.hparams.mix_text_max if self.hparams.mix_text_max is not None else 1
@@ -91,29 +91,29 @@ class CLIPSegLitModule(LightningModule):
 
             # sample weights for each element in batch
             text_weights = torch.distributions.Uniform(self.hparams.mix_text_min, max_txt).sample((batch_size,))[:, None]
-            text_weights = text_weights.cuda()
+            text_weights = text_weights.to(self.device)
 
             if self.dataset_class == 'PhraseCut':
                 # give full weight to text where support_image is invalid
                 visual_is_valid = data_x[4] if self.model.__class__.__name__ == 'CLIPDensePredTMasked' else data_x[3]
-                text_weights = torch.max(text_weights[:, 0], 1 - visual_is_valid.float().cuda()).unsqueeze(1)
+                text_weights = torch.max(text_weights[:, 0], 1 - visual_is_valid.float().to(self.device)).unsqueeze(1)
             cond = text_cond * text_weights + visual_s_cond * (1 - text_weights)
         else:  # no mix
             if self.model.__class__.__name__ == 'CLIPDensePredTMasked':
                 # compute conditional vector using CLIP masking
                 # with autocast_fn():
                 assert self.dataset_mask == 'separate'
-                cond, _, _ = self.model.visual_forward_masked(data_x[1].cuda(), data_x[2].cuda())
+                cond, _, _ = self.model.visual_forward_masked(data_x[1].to(self.device), data_x[2].to(self.device))
                 # end of autocast
             else:
                 cond = data_x[1]
                 if isinstance(cond, torch.Tensor):
-                    cond = cond.cuda()
+                    cond = cond.to(self.device)
 
         # with autocast_fn():
         # visual_q = None
-        pred, visual_q, _, _ = self.model(data_x[0].cuda(), cond, return_features=True)
-        loss = self.loss_fn(pred, data_y[0].cuda())
+        pred, visual_q, _, _ = self.model(data_x[0].to(self.device), cond, return_features=True)
+        loss = self.loss_fn(pred, data_y[0].to(self.device))
         # TODO monitor loss
         # if torch.isnan(loss) or torch.isinf(loss):
         #     # skip if loss is nan
