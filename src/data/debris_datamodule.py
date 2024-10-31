@@ -123,13 +123,14 @@ class DebrisDataModule(LightningDataModule):
         self.validate_dataset = Subset(self.full_dataset, val_indices)
         self.test_dataset = Subset(self.full_dataset, test_indices)
 
-
     def print_dataset_stats(self):
         print('-------------- Dataset Statistics --------------------')
         print(f"Train dataset size: {len(self.train_dataset)}")
         print(f"Validation dataset size: {len(self.validate_dataset)}")
         print(f"Test dataset size: {len(self.test_dataset) if self.test_dataset is not None else 0}")
+        print(f'* {len(self.hparams.remove_ids)} file(s) removed: {self.hparams.remove_ids}')
         print('------------------------------------------------------')
+
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, shuffle=True,

@@ -16,12 +16,13 @@ __author__ = 'yuhao liu'
 
 class DebrisOneHotDataset(Dataset):
 
-    def __init__(self, dataset_dir: str, resize_to: tuple, text_prompts: List, densities: List,
+    def __init__(self, dataset_dir: str, resize_to: tuple, text_prompts: List, densities: List, ids_to_remove: List = None,
                  *args, **kwargs):
         self.dataset_dir = dataset_dir
         self.text_prompts = text_prompts
         self.densities = densities
         self.resize_to = resize_to
+        self.ids_to_remove = ids_to_remove
 
         self.num_classes = len(text_prompts)
         assert len(densities) == self.num_classes
@@ -29,11 +30,13 @@ class DebrisOneHotDataset(Dataset):
         self.original_imgs = natsorted([p.join(self.original_image_dir, f)
                                         for f in os.listdir(self.original_image_dir)
                                         if f.endswith('.png') and '._' not in f])
+        self.original_imgs = self.remove_ids(self.original_imgs)
         self.img_ids = [f.split('-')[2].split('_')[0] for f in self.original_imgs]
 
         self.annotation_dir = p.join(dataset_dir, 'segmentation_merged')
         self.annotation_files = natsorted([p.join(self.annotation_dir, f) for f in os.listdir(self.annotation_dir)
                                            if f.endswith('.png')])
+        self.annotation_files = self.remove_ids(self.annotation_files)
         self.vis_prompt_dir = p.join(dataset_dir, 'vis_prompts')
         self.vis_prompts = {}
 
@@ -67,6 +70,19 @@ class DebrisOneHotDataset(Dataset):
         data_y = (annotation, annotation_one_hot, idx)
 
         return data_x, data_y
+
+    def remove_ids(self, query_list: List[str]):
+        if self.ids_to_remove is None:
+            return query_list
+        elif len(self.ids_to_remove) == 0:
+            return query_list
+        for remove_id in self.ids_to_remove:
+            # remove item containing remove_id
+            len_ = len(query_list)
+            query_list = [f for f in query_list if str(remove_id) not in f]
+            assert len(query_list) < len_, f'Failed to remove {remove_id} from the list. '
+            # print(f"Removed {remove_id} from the list.")
+        return query_list
 
     def find_input_img(self, img_id: str):
         # find the input RGB image
@@ -127,6 +143,7 @@ class DebrisOneHotDataset(Dataset):
         if len(t.shape) == 2:
             t = t.unsqueeze(0)
         return t
+
 
 class DebrisPredictionDataset(Dataset):
     def __init__(self, dataset_dir: str, resize_to: tuple, text_prompts: List, densities: List,
@@ -190,6 +207,8 @@ class DebrisPredictionDataset(Dataset):
         t = self.normalize(t)
         return t
 
+
+
 if __name__ == '__main__':
     # d = DebrisOneHotDataset('/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/union',
     #                         (256, 256),
@@ -197,5 +216,4 @@ if __name__ == '__main__':
     #                         densities=['no', 'low', 'high'])
     # # get a sample
     # data_x, data_y = d[0]
-
     pass
