@@ -10,7 +10,7 @@ callbacks:
   model_checkpoint:
     dirpath: ${paths.output_dir}/checkpoints
     filename: "epoch_{epoch:03d}"
-    monitor: "val/dice"
+    monitor: "val/dice_debris"
     mode: "max"
     save_last: true
     auto_insert_metric_name: false
