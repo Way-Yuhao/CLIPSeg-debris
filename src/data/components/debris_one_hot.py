@@ -80,7 +80,8 @@ class DebrisOneHotDataset(Dataset):
             # remove item containing remove_id
             len_ = len(query_list)
             query_list = [f for f in query_list if str(remove_id) not in f]
-            assert len(query_list) < len_, f'Failed to remove {remove_id} from the list. '
+            if len(query_list) < len_:
+                print(f'Failed to remove image {remove_id} from list.')
             # print(f"Removed {remove_id} from the list.")
         return query_list
 

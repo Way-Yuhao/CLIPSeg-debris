@@ -22,5 +22,5 @@ def scan_dir(path: str = None):
     print(empty_segs)
 
 if __name__ == '__main__':
-    union_no_negative = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/segmentation_merged/'
+    union_no_negative = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/segmentation_merged/'
     scan_dir(union_no_negative)

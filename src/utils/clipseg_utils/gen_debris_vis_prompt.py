@@ -163,13 +163,32 @@ def generate_one_hot_for_negative(rgb_img_dir: str, seg_output_dir: str):
         cv2.imwrite(output_file, one_hot_segmentation)
 
 
+def generate_one_hot_from_hw(hw_dir: str, seg_output_dir: str):
+    os.makedirs(seg_output_dir, exist_ok=True)
+    hw_segs = os.listdir(hw_dir)
+    hw_segs = natsorted([f for f in hw_segs if f.endswith('.png') and '._' not in f])
+    indices = [re.search(r'\d+', hw_seg).group() for hw_seg in hw_segs]
+    print(len(indices))
+    for idx in tqdm(indices):
+        hw_segmentation = cv2.imread(os.path.join(hw_dir, f'post-rgb-{idx}_merged_50m.png'), cv2.IMREAD_GRAYSCALE) # shape [h, w]
+        one_hot_segmentation = np.zeros((hw_segmentation.shape[0], hw_segmentation.shape[1], 3), dtype=np.uint8)
+        # convert to one-hot
+        one_hot_segmentation[hw_segmentation == 0, 0] = 255
+        one_hot_segmentation[hw_segmentation == 1, 1] = 255
+        one_hot_segmentation[hw_segmentation == 2, 2] = 255
+        output_file = os.path.join(seg_output_dir, f'post-rgb-{idx}_merged_onehot.png')
+        cv2.imwrite(output_file, one_hot_segmentation)
+
+
 if __name__ == '__main__':
-    rgb_img_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/original'
-    segmentation_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/segmentation_hl'
-    vis_prompt_output_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/vis_prompts_hl'
-    merged_annotations = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/segmentation_merged'
-    generated_merged_annotations(rgb_img_dir, segmentation_dir, merged_annotations)
-    generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
+    rgb_img_dir = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/original'
+    # segmentation_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/segmentation_hl'
+    # vis_prompt_output_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/vis_prompts_hl'
+    merged_annotations = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/segmentation_merged'
+    hw_annotations = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/segmentation_hw'
+    # generated_merged_annotations(rgb_img_dir, segmentation_dir, merged_annotations)
+    # generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
+    generate_one_hot_from_hw(hw_annotations, merged_annotations)
 
     # negative_rgb_dir = '/home/yuhaoliu/Data/HIDeAI/negative_33/rgb'
     # negative_seg_dir = '/home/yuhaoliu/Data/HIDeAI/negative_33/one_hot_seg'

@@ -1,10 +1,10 @@
 # @package _global_
 
 defaults:
-  - data: debris_one_hot # debris_one_hot, debris_predict
+  - data: debris_predict # debris_one_hot, debris_predict
   - model: clip_seg
-  - callbacks: default # default, debris_prediction_logger
-  - logger: wandb # null, wandb
+  - callbacks: debris_prediction_logger # default, debris_prediction_logger
+  - logger: null # null, wandb
   - trainer: gpu
   - paths: default
   - extras: default
@@ -25,9 +25,10 @@ tags: ["dev"]
 #ckpt_path: ${local.log_dir}/2024-10-28_12-55-43/checkpoints/epoch_889.ckpt # bce, union, 32 negative
 #ckpt_path: ${local.log_dir}/2024-10-28_16-19-37/checkpoints/epoch_529.ckpt # bce, kooshan, no negative
 #ckpt_path: ${local.log_dir}/2024-10-31_02-29-45/checkpoints/epoch_1369.ckpt # bce kooshan + 15 from v4
-ckpt_path: ${local.log_dir}/2024-10-31_17-50-56/checkpoints/epoch_699.ckpt # bce kooshan + 15 from v4 + all neg
+ckpt_path: ${local.log_dir}/2024-10-31_17-49-00/checkpoints/epoch_1789.ckpt # bce kooshan + 15 from v4 + all neg as prompts
+#ckpt_path: ${local.log_dir}/2024-10-31_17-50-56/checkpoints/epoch_699.ckpt # bce kooshan + 15 from v4 + all neg
 
-name: debug_predict_no_detection_kooshan_v4_all_neg
+name: debug_predict_no_detection_kooshan_v4_all_neg_as_prompts
 paths:
   output_dir: ${local.prediction_output_dir}/${name}
   log_dir: ${paths.output_dir}
