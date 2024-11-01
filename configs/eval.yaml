@@ -13,6 +13,8 @@ defaults:
   - _self_
 
 task_name: "eval"
+test: true
+predict: false
 
 tags: ["dev"]
 
