@@ -13,8 +13,8 @@ defaults:
   - _self_
 
 task_name: "eval"
-test: true
-predict: false
+test: false
+predict: true
 
 tags: ["dev"]
 
@@ -27,10 +27,11 @@ tags: ["dev"]
 #ckpt_path: ${local.log_dir}/2024-10-28_12-55-43/checkpoints/epoch_889.ckpt # bce, union, 32 negative
 #ckpt_path: ${local.log_dir}/2024-10-28_16-19-37/checkpoints/epoch_529.ckpt # bce, kooshan, no negative
 #ckpt_path: ${local.log_dir}/2024-10-31_02-29-45/checkpoints/epoch_1369.ckpt # bce kooshan + 15 from v4
-ckpt_path: ${local.log_dir}/2024-10-31_17-49-00/checkpoints/epoch_1789.ckpt # bce kooshan + 15 from v4 + all neg as prompts
+#ckpt_path: ${local.log_dir}/2024-10-31_17-49-00/checkpoints/epoch_1789.ckpt # bce kooshan + 15 from v4 + all neg as prompts
 #ckpt_path: ${local.log_dir}/2024-10-31_17-50-56/checkpoints/epoch_699.ckpt # bce kooshan + 15 from v4 + all neg
+ckpt_path: ${local.log_dir}/2024-11-01_17-30-14/checkpoints/epoch_1699.ckpt # majority vote, 32 negative
 
-name: debug_predict_no_detection_kooshan_v4_all_neg_as_prompts
+name: predict_no_detection_majority_vote_32_neg
 paths:
   output_dir: ${local.prediction_output_dir}/${name}
   log_dir: ${paths.output_dir}

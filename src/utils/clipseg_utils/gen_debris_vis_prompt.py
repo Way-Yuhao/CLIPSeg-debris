@@ -181,15 +181,15 @@ def generate_one_hot_from_hw(hw_dir: str, seg_output_dir: str):
 
 
 if __name__ == '__main__':
-    rgb_img_dir = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/original'
+    # rgb_img_dir = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/original'
     # segmentation_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/segmentation_hl'
     # vis_prompt_output_dir = '/home/yuhaoliu/Data/HIDeAI/multi_labeler_onehot/kooshan_no_negative/vis_prompts_hl'
-    merged_annotations = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/segmentation_merged'
-    hw_annotations = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/segmentation_hw'
+    # merged_annotations = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/segmentation_merged'
+    # hw_annotations = '/scratch/yl241/data/HIDeAI/multi_labeler_onehot/majority_vote_no_negative/segmentation_hw'
     # generated_merged_annotations(rgb_img_dir, segmentation_dir, merged_annotations)
     # generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
-    generate_one_hot_from_hw(hw_annotations, merged_annotations)
+    # generate_one_hot_from_hw(hw_annotations, merged_annotations)
 
-    # negative_rgb_dir = '/home/yuhaoliu/Data/HIDeAI/negative_33/rgb'
-    # negative_seg_dir = '/home/yuhaoliu/Data/HIDeAI/negative_33/one_hot_seg'
-    # generate_one_hot_for_negative(negative_rgb_dir, negative_seg_dir)
+    negative_rgb_dir = '/scratch/yl241/data/HIDeAI/negative_585/rgb'
+    negative_seg_dir = '/scratch/yl241/data/HIDeAI/negative_585/one_hot_seg'
+    generate_one_hot_for_negative(negative_rgb_dir, negative_seg_dir)

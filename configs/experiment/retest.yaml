@@ -1,0 +1,9 @@
+# @package _global_
+
+defaults:
+  - data: debris_one_hot # debris_one_hot, debris_predict
+  - callbacks: default # default, debris_prediction_logger
+  - logger: wandb # null, wandb
+
+test: true
+predict: fase
