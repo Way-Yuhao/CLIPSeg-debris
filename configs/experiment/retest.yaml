@@ -1,9 +1,13 @@
 # @package _global_
 
 defaults:
-  - data: debris_one_hot # debris_one_hot, debris_predict
-  - callbacks: default # default, debris_prediction_logger
-  - logger: wandb # null, wandb
+  - override /data: debris_one_hot # debris_one_hot, debris_predict
+  - override /callbacks: default # default, debris_prediction_logger
+  - override /logger: wandb # null, wandb
+  - _self_
 
 test: true
-predict: fase
+predict: false
+callbacks:
+  debris_wandb_logger:
+    show_val_ids: []

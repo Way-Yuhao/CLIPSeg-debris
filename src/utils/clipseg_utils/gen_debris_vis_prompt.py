@@ -190,6 +190,6 @@ if __name__ == '__main__':
     # generate_vis_prompts(rgb_img_dir, segmentation_dir, vis_prompt_output_dir)
     # generate_one_hot_from_hw(hw_annotations, merged_annotations)
 
-    negative_rgb_dir = '/scratch/yl241/data/HIDeAI/negative_585/rgb'
-    negative_seg_dir = '/scratch/yl241/data/HIDeAI/negative_585/one_hot_seg'
+    negative_rgb_dir = '/scratch/yl241/data/HIDeAI/negative_734/rgb'
+    negative_seg_dir = '/scratch/yl241/data/HIDeAI/negative_734/one_hot_seg'
     generate_one_hot_for_negative(negative_rgb_dir, negative_seg_dir)
