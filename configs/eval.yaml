@@ -35,7 +35,8 @@ ckpt_path: null
 #ckpt_path: ${local.log_dir}/2024-11-04_17-07-48/checkpoints/epoch_1309.ckpt # majority vote, 585 negative
 #ckpt_path: ${local.log_dir}/2024-11-07_18-14-23/checkpoints/epoch_1759.ckpt # epoch_1199.ckpt # majority vote, 585 negative
 
-name: predict_reflection_majority_vote_585_neg_removed_5_mistakes
+#name: predict_reflection_majority_vote_585_neg_removed_5_mistakes
+name: null
 paths:
   output_dir: ${local.prediction_output_dir}/${name}
   log_dir: ${paths.output_dir}
