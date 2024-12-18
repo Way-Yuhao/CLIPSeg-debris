@@ -1,3 +1,8 @@
 debris_prediction_logger:
   _target_: src.utils.callbacks.debris_prediction_logger.DebrisPredictionLogger
   save_dir: ${paths.output_dir}
+  cmap:
+    no_debris: [135, 206, 235, 128]
+    low_density: [255, 255, 0, 128]
+    high_density: [255, 69, 0, 128]
+

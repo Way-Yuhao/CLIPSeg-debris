@@ -20,7 +20,7 @@ predict: true
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-ckpt_path: null
+#ckpt_path: null
 #ckpt_path: ${local.model_root_dir}/CLIPSeg/debris/CLIPSeg_union_ike_removed_3aix7ezw_epoch_970.ckpt
 #ckpt_path: ${local.model_dir}/CLIPSeg_at_least_two_ike_included_qv35jh2y_epoch_959.ckpt
 #ckpt_path: ${local.log_dir}/2024-10-24_22-47-03/checkpoints/epoch_429.ckpt  # bce union
@@ -34,7 +34,7 @@ ckpt_path: null
 #ckpt_path: ${local.log_dir}/2024-11-01_17-30-14/checkpoints/epoch_1699.ckpt # majority vote, 32 negative
 #ckpt_path: ${local.log_dir}/2024-11-04_17-07-48/checkpoints/epoch_1309.ckpt # majority vote, 585 negative
 #ckpt_path: ${local.log_dir}/2024-11-07_18-14-23/checkpoints/epoch_1759.ckpt # epoch_1199.ckpt # majority vote, 585 negative
-
+ckpt_path: ${local.log_dir}/2024-11-09_00-47-43/checkpoints/epoch_1079.ckpt # fLCIPSeg
 #name: predict_reflection_majority_vote_585_neg_removed_5_mistakes
 name: null
 paths:
