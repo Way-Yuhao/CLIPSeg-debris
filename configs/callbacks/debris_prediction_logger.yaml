@@ -5,4 +5,7 @@ debris_prediction_logger:
     no_debris: [135, 206, 235, 128]
     low_density: [255, 255, 0, 128]
     high_density: [255, 69, 0, 128]
+  rgb_norm:
+    mean: [0.57784108, 0.5724125, 0.5619426]
+    std: [0.24724819, 0.24302182, 0.23344601]
 

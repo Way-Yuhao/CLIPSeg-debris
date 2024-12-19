@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict, Optional, List
 import numpy as np
+import torch
 from lightning import LightningModule, Trainer
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from matplotlib import pyplot as plt
@@ -12,30 +13,50 @@ from src.utils.clipseg_utils.gen_debris_vis_prompt import one_hot_encode_segment
 
 class DebrisPredictionLogger(Callback):
 
-    def __init__(self, save_dir: str, cmap: Dict[str, List[int]]):
+    def __init__(self, save_dir: str, cmap: Dict[str, List[int]], rgb_norm: Dict[str, List[float]]):
         """
         Requires batch_size = 1
         Args:
             save_dir: directory to save the predictions
             cmap: RGBA color map for the labels
+            rgb_norm: mean and std for normalizing the RGB image
         """
         self.save_dir = os.path.join(save_dir, 'predictions')
         self.onehot_save_dir = os.path.join(save_dir, 'onehot_rbg')
+        self.rgb_dir = os.path.join(save_dir, 'original')
+        self.gt_dir = os.path.join(save_dir, 'ground_truth')
         self.cmap = cmap
+        self.rgb_norm = rgb_norm
+
+        self.mean, self.std = None, None
+
+
+    def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
+        self.mean = np.array(self.rgb_norm['mean'])
+        self.std = np.array(self.rgb_norm['std'])
+        self.mean = self.mean[:, np.newaxis, np.newaxis]
+        self.std = self.std[:, np.newaxis, np.newaxis]
+
         os.makedirs(self.save_dir, exist_ok=True)
         os.makedirs(self.onehot_save_dir, exist_ok=True)
+        os.makedirs(self.rgb_dir, exist_ok=True)
+        os.makedirs(self.gt_dir, exist_ok=True)
+
+
+    def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
+                          batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        # self.save_png(batch, outputs)
+        # self.save_one_hot_rgb(batch, outputs)
+        self.save_rgb_image(batch, outputs)
+        self.save_cmap_output(batch, outputs)
+        self.save_ground_truth(batch, outputs)
 
 
     def on_predict_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: Any,
                              batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         # self.save_png(batch, outputs)
         # self.save_one_hot_rgb(batch, outputs)
-        self.save_cmap_output(batch, outputs)
-
-    def on_test_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: STEP_OUTPUT,
-                          batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
-        # self.save_png(batch, outputs)
-        # self.save_one_hot_rgb(batch, outputs)
+        self.save_rgb_image(batch, outputs)
         self.save_cmap_output(batch, outputs)
 
     def save_png(self, batch: Any, outputs: Any):
@@ -52,31 +73,44 @@ class DebrisPredictionLogger(Callback):
         fname = os.path.join(self.onehot_save_dir, batch[1][2][0])
         cv2.imwrite(fname, one_hot_segmentation)
 
+    def save_rgb_image(self, batch: Any, outputs: Any):
+        # extract rgb image
+        original_image = self.extract_rgb_image(outputs)
+        fname = os.path.join(self.rgb_dir, f"{batch[1][2][0]}.png")
+        original_image.save(fname, 'PNG')
+
+    def save_ground_truth(self, batch: Any, outputs: Any):
+        # extract rgb image
+        original_image = self.extract_rgb_image(outputs)
+        gt_class = torch.argmax( outputs["data_y"][1], dim=1)
+        gt_class = gt_class.squeeze().detach().cpu().numpy()
+        # convert labels to a semi-transparent color overlay
+        overlay_img = self.label_to_color_image(gt_class)
+        final_visualization = Image.alpha_composite(original_image, overlay_img)
+        fname = os.path.join(self.gt_dir, f"{batch[1][2][0]}.png")
+        final_visualization.save(fname, 'PNG')
+
     def save_cmap_output(self, batch: Any, outputs: Any):
         # extract rgb image
-        original_image = outputs["data_x"][0].squeeze().detach().cpu().numpy()
-        original_image = np.moveaxis(original_image, 0, -1)
-        original_image = (original_image * 255).astype(np.uint8)
-        original_image = cv2.cvtColor(original_image, cv2.COLOR_RGB2BGR)
-        original_image = Image.fromarray(original_image).convert("RGBA")
-
+        original_image = self.extract_rgb_image(outputs)
         # extract predicted class
         pred_class = outputs["pred_class"].squeeze().detach().cpu().numpy()
-
-
-        # Convert labels to a semi-transparent color overlay
+        # convert labels to a semi-transparent color overlay
         overlay_img = self.label_to_color_image(pred_class)
-
         final_visualization = Image.alpha_composite(original_image, overlay_img)
         fname = os.path.join(self.onehot_save_dir, f"{batch[1][2][0]}.png")
         final_visualization.save(fname, 'PNG')
 
+    def extract_rgb_image(self, outputs: Any):
+        # extract rgb image
+        original_image = outputs["data_x"][0].squeeze().detach().cpu().numpy()
+        original_image = original_image * self.std + self.mean
 
-
-        # final_visualization.save(final_merged_output_path, 'PNG')
-        #
-        # print(f"Resized original image saved at {resized_original_output_path}")
-        # print(f"Overlay image saved at {final_merged_output_path}")
+        original_image = np.moveaxis(original_image, 0, -1)
+        original_image = np.clip(original_image, 0, 1)
+        original_image = (original_image * 255).astype(np.uint8)
+        original_image = Image.fromarray(original_image).convert("RGBA")
+        return original_image
 
     def label_to_color_image(self, label):
         """
