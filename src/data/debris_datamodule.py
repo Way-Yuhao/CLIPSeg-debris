@@ -143,19 +143,22 @@ class DebrisDataModule(LightningDataModule):
                           persistent_workers=self.hparams.persistent_workers)
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self.test_dataset, batch_size=1, shuffle=False,
-                          num_workers=1, pin_memory=self.hparams.pin_memory,
-                          persistent_workers=self.hparams.persistent_workers)
-
-        # use val as test
-        # return DataLoader(self.validate_dataset, batch_size=1, shuffle=False,
-        #                   num_workers=1, pin_memory=self.hparams.pin_memory,
-        #                   persistent_workers=self.hparams.persistent_workers)
-
-        # use train as test
-        # return DataLoader(self.train_dataset, batch_size=1, shuffle=False,
-        #                   num_workers=1, pin_memory=self.hparams.pin_memory,
-        #                   persistent_workers=self.hparams.persistent_workers)
+        if self.hparams.override_test_dataset_with is None:
+            return DataLoader(self.test_dataset, batch_size=1, shuffle=False,
+                              num_workers=1, pin_memory=self.hparams.pin_memory,
+                              persistent_workers=self.hparams.persistent_workers)
+        elif self.hparams.override_test_dataset_with == 'val':
+            print('Overriding test dataset with validation dataset...')
+            return DataLoader(self.validate_dataset, batch_size=1, shuffle=False,
+                              num_workers=1, pin_memory=self.hparams.pin_memory,
+                              persistent_workers=self.hparams.persistent_workers)
+        elif self.hparams.override_test_dataset_with == 'train':
+            print('Overriding test dataset with training dataset...')
+            return DataLoader(self.train_dataset, batch_size=1, shuffle=False,
+                              num_workers=1, pin_memory=self.hparams.pin_memory,
+                              persistent_workers=self.hparams.persistent_workers)
+        else:
+            raise ValueError(f"Invalid override_test_dataset_with value: {self.hparams.override_test_dataset_with}")
 
     @staticmethod
     def delete_dot_underscore_files(directory: str):
