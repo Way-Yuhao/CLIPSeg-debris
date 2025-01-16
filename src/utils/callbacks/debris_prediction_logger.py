@@ -70,13 +70,13 @@ class DebrisPredictionLogger(Callback):
         seg_low = pred_class == 1
         seg_high = pred_class == 2
         one_hot_segmentation = one_hot_encode_segmentation(seg_low, seg_high)
-        fname = os.path.join(self.onehot_save_dir, batch[1][2][0])
+        fname = os.path.join(self.onehot_save_dir, batch[0][4][0])
         cv2.imwrite(fname, one_hot_segmentation)
 
     def save_rgb_image(self, batch: Any, outputs: Any):
         # extract rgb image
         original_image = self.extract_rgb_image(outputs)
-        fname = os.path.join(self.rgb_dir, f"{batch[1][2][0]}.png")
+        fname = os.path.join(self.rgb_dir, f"{batch[0][4][0]}.png")
         original_image.save(fname, 'PNG')
 
     def save_ground_truth(self, batch: Any, outputs: Any):
@@ -87,7 +87,7 @@ class DebrisPredictionLogger(Callback):
         # convert labels to a semi-transparent color overlay
         overlay_img = self.label_to_color_image(gt_class)
         final_visualization = Image.alpha_composite(original_image, overlay_img)
-        fname = os.path.join(self.gt_dir, f"{batch[1][2][0]}.png")
+        fname = os.path.join(self.gt_dir, f"{batch[0][4][0]}.png")
         final_visualization.save(fname, 'PNG')
 
     def save_cmap_output(self, batch: Any, outputs: Any):
@@ -98,7 +98,7 @@ class DebrisPredictionLogger(Callback):
         # convert labels to a semi-transparent color overlay
         overlay_img = self.label_to_color_image(pred_class)
         final_visualization = Image.alpha_composite(original_image, overlay_img)
-        fname = os.path.join(self.onehot_save_dir, f"{batch[1][2][0]}.png")
+        fname = os.path.join(self.onehot_save_dir, f"{batch[0][4][0]}.png")
         final_visualization.save(fname, 'PNG')
 
     def extract_rgb_image(self, outputs: Any):

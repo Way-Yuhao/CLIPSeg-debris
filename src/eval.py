@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Tuple
 
 import hydra
 import rootutils
+import lightning as L
 from lightning import LightningDataModule, LightningModule, Trainer, Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
@@ -46,7 +47,8 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     :param cfg: DictConfig configuration composed by Hydra.
     :return: Tuple[dict, dict] with metrics and dict with all instantiated objects.
     """
-    # assert cfg.ckpt_path
+    if cfg.get("seed"):
+        L.seed_everything(cfg.seed, workers=True)
     if not cfg.ckpt_path:
         log.warning("No checkpoint path provided!")
 

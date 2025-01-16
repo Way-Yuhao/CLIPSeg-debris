@@ -38,10 +38,12 @@ class PrecomputedLitModule(LightningModule):
 
     def test_step(self, batch: List[Any], batch_idx: int) -> Dict:
         data_x, data_y = batch  # unpack
-        img_id = data_x[4]
-        self.find_output(img_id[0])
+        # img_id = data_x[4]
+        # self.find_output(img_id[0])
         # pred_class = self.find_output(img_id[0])
         # gt_class = torch.argmax(data_y[1], dim=1) # shape [1, h, w]
+        if batch_idx == 609:
+            print(0)
         pass
 
     def find_output(self, img_id: str):
