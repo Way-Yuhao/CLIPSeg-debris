@@ -17,7 +17,7 @@ mask: "text_and_crop_blur_highlight352"
 # dataset parameters
 dataset:
   _target_: src.data.components.debris_one_hot.DebrisPredictionDataset
-  dataset_dir: ${local.data_dir}/HIDeAI/predict_example/reflection
+  dataset_dir: ${local.data_dir}/HIDeAI/predict_highres/
   resize_to: [256, 256]
   text_prompts: ['no debris', 'debris at low density', 'debris at high density']
   densities: ['no', 'low', 'high']

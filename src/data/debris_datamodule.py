@@ -143,7 +143,11 @@ class DebrisDataModule(LightningDataModule):
                           persistent_workers=self.hparams.persistent_workers)
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self.test_dataset, batch_size=1, shuffle=False,
+        # return DataLoader(self.test_dataset, batch_size=1, shuffle=False,
+        #                   num_workers=1, pin_memory=self.hparams.pin_memory,
+        #                   persistent_workers=self.hparams.persistent_workers)
+
+        return DataLoader(self.validate_dataset, batch_size=1, shuffle=False,
                           num_workers=1, pin_memory=self.hparams.pin_memory,
                           persistent_workers=self.hparams.persistent_workers)
 

@@ -163,7 +163,7 @@ class CLIPSegLitModule(LightningModule):
         stacked_rgb_inputs = data_x[0].repeat(len(prompts), 1, 1, 1)
         pred, visual_q, _, _ = self.model(stacked_rgb_inputs, prompts, return_features=True) # pred : [3, h, w]
         pred_class = torch.argmax(pred, dim=0)  #pred_class: [h, w]
-        step_output = {'pred_class': pred_class}
+        step_output = {"data_x": data_x, 'pred_class': pred_class}
         return step_output
 
     def compute_metric_single_class_2(self, pred_class: torch.Tensor, gt_class: torch.Tensor, stage: str) -> torch.Tensor:

@@ -1,0 +1,5 @@
+_target_: src.models.baseline.precomputed.PrecomputedLitModule
+
+precomputed_output_dir: ${local.data_dir}/HIDeAI/existing_predictions/hauptman_prediction/
+#precomputed_output_dir: ${local.data_dir}/HIDeAI/existing_predictions/our_prediction/
+output_type: png

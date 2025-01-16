@@ -65,7 +65,7 @@ class DebrisOneHotDataset(Dataset):
         annotation = self.find_annotation_for_density(img_id, density)
         annotation = self.cvt_annotation_to_tensor(annotation)
 
-        data_x = (img, ) + tuple(vis_s)
+        data_x = (img, ) + tuple(vis_s) + (img_id,) # modified to also return img_id as string
         # FIXME: annotation_one_hot used to be torch.zeros(0)
         data_y = (annotation, annotation_one_hot, idx)
 
