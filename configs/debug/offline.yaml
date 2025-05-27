@@ -1,0 +1,12 @@
+# @package _global_
+
+# overwrite task name so debugging logs are stored in separate folder
+task_name: "debug"
+
+logger:
+  wandb:
+    offline: true
+
+callbacks:
+  slack_alert:
+    disabled: true

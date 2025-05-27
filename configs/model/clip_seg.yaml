@@ -7,7 +7,7 @@ mix_text_max: 0.5
 mix_text_min: 0.0
 pretrained_clipseg_ckpt: ${local.model_root_dir}/CLIPSeg/rd64-uni-refined.pth
 
-loss_fn:
+criterion:
   _target_: src.utils.clipseg_utils.loss.BinaryCrossEntropyWithLogitsLoss
 
 optimizer:
