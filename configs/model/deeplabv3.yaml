@@ -1,0 +1,27 @@
+# config/model/deeplabv3.yaml
+_target_: src.models.deeplabv3.DeepLabV3LitModule
+
+# the backbone instantiates torchvision’s DeepLabV3-ResNet101
+model:
+  _target_: torchvision.models.segmentation.deeplabv3_resnet101
+  pretrained: false
+  progress: true
+  num_classes: 3     # output channels / classes
+  aux_loss: false    # disable the auxiliary classifier head
+
+# optimizer stays the same as your UNet setup
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 2e-4
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+# for segmentation you can keep using BCEWithLogits if you have per-pixel binary masks,
+# or switch to CrossEntropyLoss for multi-class masks:
+criterion:
+  _target_: src.utils.clipseg_utils.loss.BinaryCrossEntropyWithLogitsLoss
+
+scheduler: null
+compile: false
