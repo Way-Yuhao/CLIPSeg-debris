@@ -7,7 +7,6 @@ from lightning import LightningModule
 from lightning.pytorch.utilities.types import OptimizerLRScheduler, STEP_OUTPUT
 from matplotlib import pyplot as plt
 from sklearn.metrics import jaccard_score, precision_score, recall_score, f1_score
-# from src.utils.multi_annotators_utils.utilis import segmentation_scores, generalized_energy_distance
 
 
 __author__ = 'Yuhao Liu'
