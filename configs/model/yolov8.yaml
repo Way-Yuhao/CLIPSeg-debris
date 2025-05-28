@@ -1,0 +1,23 @@
+_target_: src.models.baseline.yolo.yolov8_module.YOLOv8LitModule
+
+model:
+  _target_: src.models.baseline.yolo.yolov8.get_yolo
+  variant: 's'
+  num_classes: 3
+
+# optimizer stays the same as your UNet setup
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 2e-4
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+# for segmentation you can keep using BCEWithLogits if you have per-pixel binary masks,
+# or switch to CrossEntropyLoss for multi-class masks:
+criterion:
+  _target_: torch.nn.CrossEntropyLoss
+
+scheduler: null
+compile: false
