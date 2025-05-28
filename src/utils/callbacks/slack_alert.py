@@ -54,10 +54,10 @@ class SlackAlert(Callback):
         if self.webhook_url is None:
             logger.warning('SlackAlert not configured. To send alerts to slack, '
                            'set SLACK_WEBHOOK_URL in .env file under project root directory.')
-            self.configured = True
+            self.configured = False
         else:
             logger.info('SlackAlert configured. Monitoring alerts to be relayed to Slack..')
-            self.configured = False
+            self.configured = True
         return
 
     def on_train_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
