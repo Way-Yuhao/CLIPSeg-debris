@@ -100,7 +100,7 @@ class DebrisWandbLogger(Callback):
                 ('ground_truth', {'mask_data': gt_class, 'class_labels': self.logger_class_labels})
             ])
         )
-        wandb.log({f"{mode}/images_{batch_idx}": masked_img}, commit=False)
+        wandb.log({f"{mode}/vis/images_{batch_idx}": masked_img}, commit=False)
 
     @staticmethod
     def log_img_pair(outputs: STEP_OUTPUT, mode: str, batch_idx: int):
@@ -132,7 +132,7 @@ class DebrisWandbLogger(Callback):
         buf.seek(0)
         img = Image.open(buf)
         # Log the PIL Image to wandb
-        wandb.log({f"{mode}/images_{batch_idx}": wandb.Image(img)})
+        wandb.log({f"{mode}/vis/images_{batch_idx}": wandb.Image(img)})
 
     def _check_frequency(self, trainer: "pl.trainer", key: str, update: bool = True) -> bool:
         if self.freqs[key] == -1:

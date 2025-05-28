@@ -87,7 +87,7 @@ class GenericDebrisSegmentationModule(LightningModule, ABC):
         self.log(f"{stage}/iou_no_debris", iou_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/iou_debris_low", iou_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/iou_debris_high", iou_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/iou_macro", iou, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/iou_macro", iou, on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/precision_no_debris", precision_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/precision_debris_low", precision_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/precision_debris_high", precision_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
@@ -98,7 +98,7 @@ class GenericDebrisSegmentationModule(LightningModule, ABC):
         self.log(f"{stage}/f1_score_debris_low", f1_score_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/f1_score_debris_high", f1_score_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/f1_macro", f1, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/f1_macro_debris_only", f1_debris_only, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
+        self.log(f"{stage}/f1_macro_debris_only", f1_debris_only, on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
         self.log(f"{stage}/dice_debris", dice_debris, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
         self.log(f"{stage}/dice", dice, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
 
