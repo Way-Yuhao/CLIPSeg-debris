@@ -1,7 +1,7 @@
 # config/model/deeplabv3.yaml
-_target_: src.models.deeplabv3.DeepLabV3LitModule
+_target_: src.models.DeepLabV3LitModule
 
-# the backbone instantiates torchvision’s DeepLabV3-ResNet101
+# torchvision’s DeepLabV3-ResNet101
 model:
   _target_: torchvision.models.segmentation.deeplabv3_resnet101
   pretrained: false
@@ -21,7 +21,7 @@ optimizer:
 # for segmentation you can keep using BCEWithLogits if you have per-pixel binary masks,
 # or switch to CrossEntropyLoss for multi-class masks:
 criterion:
-  _target_: src.utils.clipseg_utils.loss.BinaryCrossEntropyWithLogitsLoss
+  _target_: torch.nn.CrossEntropyLoss
 
 scheduler: null
 compile: false
