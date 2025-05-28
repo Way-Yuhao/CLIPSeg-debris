@@ -16,5 +16,6 @@ trainer:
 
 callbacks:
   model_checkpoint:
+    monitor: "val/dice_debris"
     every_n_epochs: null
     save_top_k: 5

@@ -130,6 +130,7 @@ class SlackAlert(Callback):
         :return:
         """
         if not self.configured:
+            logger.debug('SlackAlert not configured. No alerts sent.')
             return
         data = {'text': message,
                 'username': 'Webhook Alert',
