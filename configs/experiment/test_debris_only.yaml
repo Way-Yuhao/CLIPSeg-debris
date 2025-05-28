@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - override /data: debris_one_hot
+  - override /callbacks: default
+  - override /logger: wandb
+  - _self_
+
+data:
+  merge_via: majority_vote_no_negative # positive subset
+#  merge_via: 734_negative_only # negative subset
+remove_ids: [001477,000391,000393,020818,020976,000134,021722]
+
+test: true
+predict: false
+
+callbacks:
+  debris_wandb_logger:
+    show_val_ids: []

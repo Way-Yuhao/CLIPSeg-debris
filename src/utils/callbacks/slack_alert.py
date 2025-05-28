@@ -39,6 +39,7 @@ class SlackAlert(Callback):
         self.at_global_step = at_global_step
         self.hostname = socket.gethostname()
         self.webhook_url = None
+        self.configured = False
 
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
         path_to_restore = os.getcwd()
@@ -46,14 +47,17 @@ class SlackAlert(Callback):
         load_dotenv('.env')
         os.chdir(path_to_restore)
         self.webhook_url = os.getenv('SLACK_WEBHOOK_URL')
-
+        if self.disabled:
+            logger.debug('SlackAlert disabled. No alerts will be sent to Slack.')
+            self.configured = False
+            return
         if self.webhook_url is None:
             logger.warning('SlackAlert not configured. To send alerts to slack, '
                            'set SLACK_WEBHOOK_URL in .env file under project root directory.')
-            self.disabled = True
+            self.configured = True
         else:
             logger.info('SlackAlert configured. Monitoring alerts to be relayed to Slack..')
-            self.disabled = False
+            self.configured = False
         return
 
     def on_train_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
@@ -109,7 +113,7 @@ class SlackAlert(Callback):
         """
         Send slack alert on successful teardown.
         """
-        if not self.exception_only and not self.exception_occurred and not self.disabled:
+        if not self.exception_only and not self.exception_occurred and self.configured:
             title = f'{stage.capitalize()} completed'
             now = datetime.now() # current time
             formatted_time = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -125,7 +129,7 @@ class SlackAlert(Callback):
         :param message:
         :return:
         """
-        if self.disabled:
+        if not self.configured:
             return
         data = {'text': message,
                 'username': 'Webhook Alert',

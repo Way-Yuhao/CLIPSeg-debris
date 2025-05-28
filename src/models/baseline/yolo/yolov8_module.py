@@ -14,7 +14,7 @@ class YOLOv8LitModule(GenericDebrisSegmentationModule):
         return
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.model(x)['out']
+        return self.model(x)
 
     def training_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, torch.Tensor]:
         """Perform a single training step on a batch of data from the training set.

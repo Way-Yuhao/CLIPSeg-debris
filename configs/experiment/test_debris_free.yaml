@@ -1,0 +1,9 @@
+# @package _global_
+
+defaults:
+  - test_debris_only
+  - _self_
+
+data:
+#  merge_via: majority_vote_no_negative # positive subset
+  merge_via: 734_negative_only # negative subset

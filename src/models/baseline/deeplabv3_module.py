@@ -45,3 +45,13 @@ class DeepLabV3LitModule(GenericDebrisSegmentationModule):
         step_output = {"data_x": batch[0], "data_y": batch[1], "pred": prediction, "gt_one_hot": batch[1][1],
                        "pred_class": pred_class, "gt_class": gt_class}
         return step_output
+
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict[str, torch.Tensor]:
+        query_img, label = self.unpack(batch)
+        prediction = self.forward(query_img)
+        pred_class = torch.argmax(prediction, dim=1)
+        gt_class = torch.argmax(label, dim=1)
+        self.compute_metric_single_class_2(pred_class, gt_class, 'test')
+        step_output = {"data_x": batch[0], "data_y": batch[1], "pred": prediction, "gt_one_hot": batch[1][1],
+                       "pred_class": pred_class, "gt_class": gt_class}
+        return step_output
