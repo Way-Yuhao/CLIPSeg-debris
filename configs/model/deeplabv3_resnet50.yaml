@@ -1,0 +1,7 @@
+defaults:
+  - deeplabv3
+  - _self_
+
+# torchvision’s DeepLabV3-ResNet50
+model:
+  _target_: torchvision.models.segmentation.deeplabv3_resnet50
