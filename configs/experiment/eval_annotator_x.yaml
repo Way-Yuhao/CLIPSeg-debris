@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - override /model: annotator_reader
+#  - override /logger: null
+  - override /callbacks: null
+  - override /data: debris_one_hot
+  - _self_
+
+test: true
+predict: false
+
+model:
+  model:
+    annotator: annotator_1
+
+data:
+    slit_dataset: all_to_test
+    merge_via: majority_vote_734_negative # union

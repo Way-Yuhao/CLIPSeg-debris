@@ -3,7 +3,7 @@ debris_prediction_logger:
   save_dir: ${paths.output_dir}
   cmap:
     no_debris: [135, 206, 235, 128]
-    low_density: [255, 255, 0, 128]
+    low_density: [255, 215, 0, 128]
     high_density: [255, 69, 0, 128]
   rgb_norm:
     mean: [0.57784108, 0.5724125, 0.5619426]

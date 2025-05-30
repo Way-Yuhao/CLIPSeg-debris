@@ -1,0 +1,22 @@
+_target_: src.models.DeepLabV3PlusLitModule
+
+model:
+  _target_: torchvision.models.segmentation.deeplabv3plus_resnet101
+  pretrained: false           # start from scratch
+  progress: true              # show download progress if pretrained=True
+  num_classes: 3              # output channels / classes
+  aux_loss: false             # disable the auxiliary classifier head
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 2e-4
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+criterion:
+  _target_: torch.nn.CrossEntropyLoss
+
+scheduler: null
+compile: false

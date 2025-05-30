@@ -1,0 +1,6 @@
+_target_: src.models.annotator_reader_module.AnnotationReaderLitModule
+
+model:
+  _target_: src.models.components.read_from_annotator.AnnotationReader
+  annotation_parent_dir: /home/yl241/data/HIDeAI/group_labels
+  annotator: annotator_1

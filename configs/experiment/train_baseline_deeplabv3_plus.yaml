@@ -1,0 +1,23 @@
+# @package _global_
+
+defaults:
+  - override /model: deeplabv3_plus
+  - _self_
+
+test: true
+
+data:
+#  batch_size: 32
+  merge_via: majority_vote_734_negative
+  remove_ids: ['001477', '000391', '000393', '020818', '020976', '000134', '021722']
+
+trainer:
+  check_val_every_n_epoch: 10
+  max_epochs: 1000
+#  accumulate_grad_batches: 2
+
+callbacks:
+  model_checkpoint:
+    monitor: "val/dice_debris"
+    every_n_epochs: null
+    save_top_k: 5

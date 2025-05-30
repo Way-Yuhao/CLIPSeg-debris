@@ -38,6 +38,8 @@ class DebrisDataModule(LightningDataModule):
             self._split_dataset_by_hurricane()
         elif self.hparams.slit_dataset == "hurricane_test":
             self._split_dataset_by_hurricane_test()
+        elif self.hparams.slit_dataset == "all_to_test":
+            self._split_all_to_test()
         else:
             raise ValueError(f"Invalid dataset split method: {self.hparams.slit_dataset}")
         self.print_dataset_stats() # print dataset stats
@@ -122,6 +124,15 @@ class DebrisDataModule(LightningDataModule):
         self.train_dataset = Subset(self.full_dataset, train_indices)
         self.validate_dataset = Subset(self.full_dataset, val_indices)
         self.test_dataset = Subset(self.full_dataset, test_indices)
+
+    def _split_all_to_test(self):
+        """
+        Split all data to test set.
+        """
+        print('Splitting all data to test set...')
+        self.train_dataset = self.full_dataset
+        self.validate_dataset = self.full_dataset
+        self.test_dataset = self.full_dataset
 
     def print_dataset_stats(self):
         print('-------------- Dataset Statistics --------------------')
