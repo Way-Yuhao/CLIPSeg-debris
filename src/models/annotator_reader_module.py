@@ -1,6 +1,7 @@
 from typing import Any, Dict, Tuple, List
 from abc import ABC, abstractmethod
 import numpy as np
+import pandas as pd
 import torch
 from torch.nn import Softmax
 from lightning import LightningModule
@@ -24,11 +25,26 @@ class AnnotationReaderLitModule(LightningModule):
 
     def setup(self, stage: str) -> None:
         self.model.setup()
+        self.num_classes = self.trainer.datamodule.full_dataset.num_classes
+        self.one_hot_labels = [i for i in range(self.num_classes)]
+        # set up metric file
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict[str, torch.Tensor]:
+
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         pass
+        img_id = batch[0][4][0]
+        query_img = batch[0][0]
+        ground_truth = batch[1][1]
+        # convert one-hot to binary
+        ground_truth = ground_truth.argmax(dim=1)
+        is_debris_positive = torch.any(ground_truth).item()
+        if not is_debris_positive:
+            return
+        individual_annotation = self.model(query_img, img_id)
+        self.compute_metric(individual_annotation, ground_truth, img_id)
 
-    def compute_metric_single_class_2(self, pred_class: torch.Tensor, gt_class: torch.Tensor, stage: str) -> torch.Tensor:
+
+    def compute_metric(self, pred_class: torch.Tensor, gt_class: torch.Tensor, img_id: str) -> None:
         pred_class = pred_class.flatten().cpu().numpy()
         gt_class = gt_class.flatten().cpu().numpy()
 
@@ -41,24 +57,24 @@ class AnnotationReaderLitModule(LightningModule):
         f1_debris_only = f1_score(gt_class, pred_class, zero_division=1, average='macro', labels=self.one_hot_labels[1:])
         dice_debris = segmentation_scores(gt_class, pred_class, self.num_classes, filter_background=True)
         dice = segmentation_scores(gt_class, pred_class, self.num_classes, filter_background=False)
+        row_dict = {
+                   'iou': iou,
+                   'f1_score': f1,
+                   'f1_debris_only': f1_debris_only,
+                   'dice_debris': dice_debris,
+                   'dice': dice,
+                   'precision_no_debris': precision_per_class[0],
+                   'precision_debris_low': precision_per_class[1],
+                   'precision_debris_high': precision_per_class[2],
+                   'recall_no_debris': recall_per_class[0],
+                   'recall_debris_low': recall_per_class[1],
+                   'recall_debris_high': recall_per_class[2],
+                   'annotator': self.model.annotator,
+                   'img_id': img_id,
+                   }
+        self.logger.experiment.log_metrics(row_dict, step=None)
+        return
 
-        self.log(f"{stage}/iou_no_debris", iou_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/iou_debris_low", iou_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/iou_debris_high", iou_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/iou_macro", iou, on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/precision_no_debris", precision_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/precision_debris_low", precision_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/precision_debris_high", precision_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/recall_no_debris", recall_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/recall_debris_low", recall_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/recall_debris_high", recall_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/f1_score_no_debris", f1_score_per_class[0], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/f1_score_debris_low", f1_score_per_class[1], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/f1_score_debris_high", f1_score_per_class[2], on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/f1_macro", f1, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/f1_macro_debris_only", f1_debris_only, on_epoch=True, prog_bar=False, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/dice_debris", dice_debris, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
-        self.log(f"{stage}/dice", dice, on_epoch=True, prog_bar=True, batch_size=gt_class.shape[0])
 
 def segmentation_scores(label_trues, label_preds, n_class, filter_background=True):
     """

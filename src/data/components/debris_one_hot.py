@@ -16,8 +16,8 @@ __author__ = 'yuhao liu'
 
 class DebrisOneHotDataset(Dataset):
 
-    def __init__(self, dataset_dir: str, resize_to: tuple, text_prompts: List, densities: List, ids_to_remove: List = None,
-                 *args, **kwargs):
+    def __init__(self, dataset_dir: str, resize_to: tuple, text_prompts: List, densities: List,
+                 ids_to_remove: List = None, *args, **kwargs):
         self.dataset_dir = dataset_dir
         self.text_prompts = text_prompts
         self.densities = densities

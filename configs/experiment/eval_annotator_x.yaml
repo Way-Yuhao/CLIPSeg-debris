@@ -2,7 +2,7 @@
 
 defaults:
   - override /model: annotator_reader
-#  - override /logger: null
+  - override /logger: csv
   - override /callbacks: null
   - override /data: debris_one_hot
   - _self_
@@ -17,3 +17,9 @@ model:
 data:
     slit_dataset: all_to_test
     merge_via: majority_vote_734_negative # union
+
+logger:
+  csv:
+    save_dir: "${local.prediction_output_dir}/inter-annotator"
+    name: "csv/"
+    prefix: ""
