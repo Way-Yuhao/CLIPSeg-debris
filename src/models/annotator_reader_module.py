@@ -8,6 +8,7 @@ from lightning import LightningModule
 from lightning.pytorch.utilities.types import OptimizerLRScheduler, STEP_OUTPUT
 from matplotlib import pyplot as plt
 from sklearn.metrics import jaccard_score, precision_score, recall_score, f1_score
+# from src.models.components.read_from_annotator import AnnotationReader
 from src.utils import RankedLogger
 
 __author__ = 'Yuhao Liu'
@@ -16,6 +17,9 @@ logger = RankedLogger(__name__, rank_zero_only=False)
 
 
 class AnnotationReaderLitModule(LightningModule):
+    """
+    Reads annotation from a specified annotator
+    """
 
     def __init__(self, model: torch.nn.Module) -> None:
         super().__init__()
@@ -31,7 +35,6 @@ class AnnotationReaderLitModule(LightningModule):
 
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
-        pass
         img_id = batch[0][4][0]
         query_img = batch[0][0]
         ground_truth = batch[1][1]
@@ -41,7 +44,8 @@ class AnnotationReaderLitModule(LightningModule):
         if not is_debris_positive:
             return
         individual_annotation = self.model(query_img, img_id)
-        self.compute_metric(individual_annotation, ground_truth, img_id)
+        if torch.any(individual_annotation):
+            self.compute_metric(individual_annotation, ground_truth, img_id)
 
 
     def compute_metric(self, pred_class: torch.Tensor, gt_class: torch.Tensor, img_id: str) -> None:
@@ -112,4 +116,32 @@ def segmentation_scores(label_trues, label_preds, n_class, filter_background=Tru
 
     # Return the mean Dice score across all relevant classes
     return np.mean(dice_scores)
+
+# class MultiAnnotationReaderLitModule(LightningModule):
+#     """
+#     Reads annotation from multiple annotators.
+#     """
+#
+#     def __init__(self, annotator_ids: List[str], annotation_parent_dir: str):
+#         super().__init__()
+#         self.save_hyperparameters()
+#         self.models = {}
+#         return
+#
+#     def setup(self, stage: str) -> None:
+#         self.num_classes = self.trainer.datamodule.full_dataset.num_classes
+#         self.one_hot_labels = [i for i in range(self.num_classes)]
+#         for annotator in self.hparams.annotator_ids:
+#             model = AnnotationReader(annotation_parent_dir=self.hparams.annotation_parent_dir, annotator=annotator)
+#             model.setup()
+#             self.models[annotator] = model
+#         logger.info("Total annotators found: %d", len(self.models))
+#         return
+#
+#     def forward(self, query_img, img_id):
+#         raise NotImplementedError()
+#
+#
+#     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+
 

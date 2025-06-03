@@ -1,0 +1,3 @@
+_target_: src.models.annotator_reader_module.MultiAnnotationReaderLitModule
+annotation_parent_dir: /home/yl241/data/HIDeAI/group_labels
+annotator_ids: [annotator_1, annotator_2, annotator_3, annotator_4, annotator_5, annotator_6]

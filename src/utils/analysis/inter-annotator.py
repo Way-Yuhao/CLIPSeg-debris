@@ -5,6 +5,11 @@ import pandas as pd
 __author__ = 'yuhao liu'
 
 def merge_annotator_metrics():
+    """
+    Merge metrics from different annotators into a single CSV file.
+    Returns:
+
+    """
     root_dir = "/home/yl241/experiments/fCLIPSeg/inter-annotator/csv"  # e.g., "./csv" in your working directory
     # 2. Collect all DataFrames
     df_list = []
@@ -38,6 +43,8 @@ def merge_annotator_metrics():
 
     combined.to_csv(os.path.join(root_dir, "all_metrics.csv"), index=False)
     print("Merged CSV saved as all_metrics.csv")
+
+
 
 
 if __name__ == "__main__":
