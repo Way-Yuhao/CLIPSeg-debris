@@ -8,7 +8,7 @@ from lightning import LightningModule
 from lightning.pytorch.utilities.types import OptimizerLRScheduler, STEP_OUTPUT
 from matplotlib import pyplot as plt
 from sklearn.metrics import jaccard_score, precision_score, recall_score, f1_score
-# from src.models.components.read_from_annotator import AnnotationReader
+from src.models.components.read_from_annotator import AnnotationReader
 from src.utils import RankedLogger
 
 __author__ = 'Yuhao Liu'
@@ -117,31 +117,108 @@ def segmentation_scores(label_trues, label_preds, n_class, filter_background=Tru
     # Return the mean Dice score across all relevant classes
     return np.mean(dice_scores)
 
-# class MultiAnnotationReaderLitModule(LightningModule):
-#     """
-#     Reads annotation from multiple annotators.
-#     """
-#
-#     def __init__(self, annotator_ids: List[str], annotation_parent_dir: str):
-#         super().__init__()
-#         self.save_hyperparameters()
-#         self.models = {}
-#         return
-#
-#     def setup(self, stage: str) -> None:
-#         self.num_classes = self.trainer.datamodule.full_dataset.num_classes
-#         self.one_hot_labels = [i for i in range(self.num_classes)]
-#         for annotator in self.hparams.annotator_ids:
-#             model = AnnotationReader(annotation_parent_dir=self.hparams.annotation_parent_dir, annotator=annotator)
-#             model.setup()
-#             self.models[annotator] = model
-#         logger.info("Total annotators found: %d", len(self.models))
-#         return
-#
-#     def forward(self, query_img, img_id):
-#         raise NotImplementedError()
-#
-#
-#     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+class MultiAnnotationReaderLitModule(LightningModule):
+    """
+    Reads annotation from multiple annotators.
+    """
+
+    def __init__(self, annotator_ids: List[str], annotation_parent_dir: str):
+        super().__init__()
+        self.save_hyperparameters()
+        self.models = {}
+        return
+
+    def setup(self, stage: str) -> None:
+        self.num_classes = self.trainer.datamodule.full_dataset.num_classes
+        self.one_hot_labels = [i for i in range(self.num_classes)]
+        for annotator in self.hparams.annotator_ids:
+            model = AnnotationReader(annotation_parent_dir=self.hparams.annotation_parent_dir, annotator=annotator)
+            model.setup()
+            self.models[annotator] = model
+        logger.info("Total annotators found: %d", len(self.models))
+        print("Total annotators found: %d" % len(self.models))
+        return
+
+    def forward(self, query_img, img_id):
+        return_code = 0
+        cur_annotations = {}
+        for annotator, model in self.models.items():
+            individual_annotation = model(query_img, img_id)
+            if torch.any(individual_annotation):
+               cur_annotations[annotator] = individual_annotation
+        if len(cur_annotations) != 3:
+            print(f'Only found {len(cur_annotations)} annotators for image {img_id}: {list(cur_annotations.keys())}')
+            return_code = -1
+        ordered_keys = [ann for ann in self.models.keys() if ann in cur_annotations]
+        stack_t = torch.stack([cur_annotations[ann].squeeze(0) for ann in ordered_keys], dim=0)
+        return cur_annotations, stack_t, return_code
+
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+        img_id = batch[0][4][0]
+        query_img = batch[0][0]
+        ground_truth = batch[1][1]
+        # convert one-hot to binary
+        ground_truth = ground_truth.argmax(dim=1)
+        is_debris_positive = torch.any(ground_truth).item()
+        if not is_debris_positive:
+            return
+        annotation_dict, annotation_t, return_code = self.forward(query_img, img_id)
+        if return_code == 0:
+            row_dict = self.probe_vote_stats(annotation_t, img_id)
+            class_counts = self.get_class_count(annotation_dict, ground_truth)
+            row_dict.update(class_counts)
+            self.logger.experiment.log_metrics(row_dict, step=0)
+
+    @staticmethod
+    def probe_vote_stats(annotation_t: torch.Tensor, img_id: str) -> dict:
+        """
+        Given annotation_t of shape [3, h, w], returns:
+        (unanimous_count, two_vs_one_count, all_different_count)
+        """
+        # split channels
+        a, b, c = annotation_t[0], annotation_t[1], annotation_t[2]
+        # unanimous: all three equal
+        unanimous_mask = (a == b) & (b == c)
+        unanimous = int(unanimous_mask.sum())
+        # two-vs-one: exactly two equal, third different
+        two_vs_one_mask = (
+            (a == b) & (c != a)
+            | (a == c) & (b != a)
+            | (b == c) & (a != b)
+        )
+        two_vs_one = int(two_vs_one_mask.sum())
+        # all different: neither unanimous nor two-vs-one
+        total_pixels = annotation_t.shape[1] * annotation_t.shape[2]
+        all_different = total_pixels - unanimous - two_vs_one
+        row_dict = {'img_id': img_id,
+                    'unanimous': unanimous,
+                    'two_vs_one': two_vs_one,
+                    'all_different': all_different}
+        return row_dict
+
+    @staticmethod
+    def get_class_count(annotation_dict: Dict[str, torch.Tensor], ground_truth: torch.Tensor) -> Dict[str, int]:
+        """
+        Returns a dict of pixel counts for:
+         - gt_no, gt_low, gt_high
+         - {annotator}_no, {annotator}_low, {annotator}_high
+        """
+        # flatten ground truth
+        gt_flat = ground_truth.squeeze().flatten()
+        counts: Dict[str, int] = {}
+        class_labels = {0: 'no', 1: 'low', 2: 'high'}
+
+        # gt counts
+        for cls, label in class_labels.items():
+            counts[f'gt_{label}'] = int((gt_flat == cls).sum().item())
+
+        # annotator counts
+        for annotator, ann in annotation_dict.items():
+            ann_flat = ann.squeeze().flatten()
+            for cls, label in class_labels.items():
+                key = f'{annotator}_{label}'
+                counts[key] = int((ann_flat == cls).sum().item())
+
+        return counts
 
 
