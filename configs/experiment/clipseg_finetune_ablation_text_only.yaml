@@ -1,0 +1,8 @@
+# @package _global_
+
+defaults:
+  - clipseg_finetune
+  - _self_
+
+model:
+  mix: false # disable text-vis mixing during training

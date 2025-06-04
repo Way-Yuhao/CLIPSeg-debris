@@ -15,3 +15,7 @@ callbacks:
     save_last: true
     auto_insert_metric_name: false
     every_n_epochs: 10
+
+data:
+  merge_via: majority_vote_734_negative
+  remove_ids: ['001477', '000391', '000393', '020818', '020976', '000134', '021722']

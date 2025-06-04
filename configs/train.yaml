@@ -5,7 +5,7 @@
 defaults:
   - _self_
   - data:  debris_one_hot # mnist_example
-  - model: unet_cm_mnist_example
+  - model: clip_seg
   - callbacks: default
   - logger: wandb # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
   - trainer: gpu
