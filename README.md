@@ -29,7 +29,7 @@ conda create -n clipseg python=3.10
 conda activate clipseg
 ```
 
-Install pytorch according to instructions: https://pytorch.org/get-started/.
+Install pytorch according to instructions: https://pytorch.org/get-started/.  
 Install the remaining dependencies using pip:
 ```bash
 # install requirements
