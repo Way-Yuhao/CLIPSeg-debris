@@ -1,0 +1,28 @@
+# using publicly available multi-annotator dataset
+
+_target_: src.data.debris_datamodule.DebrisDataModule
+batch_size: 64
+num_workers: 24
+pin_memory: true
+persistent_workers: true
+
+public_dataset_path: null # <-- REPLACE THIS WITH THE PATH TO YOUR PUBLIC DATASET
+slit_dataset: "hurricane_test" # "random", "hurricane", "hurricane_test"
+train_val_split_ratio: 0.8
+mask: "text_and_crop_blur_highlight352"
+override_test_dataset_with: null # if you want to override the test dataset with a different one
+hurricane_id_ranges: # for split by hurricane
+    ian: [1, 12526] # 685 labeled, high-res, for train & val
+    ida: [12527, 20132] # 273 labeled, high-res, for test
+    ike: [20133, 22527] # 284 labeled, low-res, for train & val
+remove_ike: false # if true, remove all Ike images from the dataset
+remove_ids: [] # an optional list of IDs to remove from the dataset, e.g., ['001477']
+
+# dataset parameters
+dataset:
+    _target_: src.data.components.debris_one_hot.DebrisOneHotDataset
+    dataset_dir: ${data.public_dataset_path}
+    resize_to: [256, 256]
+    text_prompts: ['no debris', 'debris at low density', 'debris at high density']
+    densities: ['no', 'low', 'high']
+    ids_to_remove: ${data.remove_ids}
