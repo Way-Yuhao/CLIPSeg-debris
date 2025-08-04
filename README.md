@@ -27,10 +27,11 @@ cd CLIPSeg-debris
 # [OPTIONAL] create conda environment
 conda create -n clipseg python=3.10
 conda activate clipseg
+```
 
-# install pytorch according to instructions: 
-# https://pytorch.org/get-started/
-
+Install pytorch according to instructions: https://pytorch.org/get-started/.
+Install the remaining dependencies using pip:
+```bash
 # install requirements
 pip install -r requirements.txt
 ```
@@ -43,7 +44,7 @@ Navigate to Design-Safe to download the annotated debris dataset proposed in thi
 Fine-tune CLIPSeg model on the dataset using the provided training script.
 
 ```bash
-# train on GPU, e.g., GPU 0
+# training on GPU 0, for example: 
 python ./src/train.py experiment=clipseg_finetune trainer.devices=[0]
 ```
 Experiment configuration can be found from [configs/experiment/](configs/experiment/)
