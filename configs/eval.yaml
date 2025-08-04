@@ -3,7 +3,7 @@
 defaults:
   - data: debris_predict # debris_one_hot, debris_predict
   - model: clip_seg
-  - callbacks: none # debris_prediction_logger # default, debris_prediction_logger
+  - callbacks: debris_prediction_logger # debris_prediction_logger # default, debris_prediction_logger
   - logger: null # null, wandb
   - trainer: gpu
   - paths: default
@@ -21,24 +21,9 @@ seed: 42
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
-#ckpt_path: null # CLIPSeg prior to finetuning
-#ckpt_path: ${local.model_root_dir}/CLIPSeg/debris/CLIPSeg_union_ike_removed_3aix7ezw_epoch_970.ckpt
-#ckpt_path: ${local.model_dir}/CLIPSeg_at_least_two_ike_included_qv35jh2y_epoch_959.ckpt
-#ckpt_path: ${local.log_dir}/2024-10-24_22-47-03/checkpoints/epoch_429.ckpt  # bce union
-#ckpt_path: ${local.log_dir}/2024-10-24_22-47-13/checkpoints/epoch_1479.ckpt  # focal union
-#ckpt_path: ${local.log_dir}/2024-10-25_20-21-24/checkpoints/epoch_699.ckpt # bce, union, no negative
-#ckpt_path: ${local.log_dir}/2024-10-28_12-55-43/checkpoints/epoch_889.ckpt # bce, union, 32 negative
-#ckpt_path: ${local.log_dir}/2024-10-28_16-19-37/checkpoints/epoch_529.ckpt # bce, kooshan, no negative
-#ckpt_path: ${local.log_dir}/2024-10-31_02-29-45/checkpoints/epoch_1369.ckpt # bce kooshan + 15 from v4
-#ckpt_path: ${local.log_dir}/2024-10-31_17-49-00/checkpoints/epoch_1789.ckpt # bce kooshan + 15 from v4 + all neg as prompts
-#ckpt_path: ${local.log_dir}/2024-10-31_17-50-56/checkpoints/epoch_699.ckpt # bce kooshan + 15 from v4 + all neg
-#ckpt_path: ${local.log_dir}/2024-11-01_17-30-14/checkpoints/epoch_1699.ckpt # majority vote, 32 negative
-#ckpt_path: ${local.log_dir}/2024-11-04_17-07-48/checkpoints/epoch_1309.ckpt # majority vote, 585 negative
-#ckpt_path: ${local.log_dir}/2024-11-07_18-14-23/checkpoints/epoch_1759.ckpt # epoch_1199.ckpt # majority vote, 585 negative
-ckpt_path: ${local.log_dir}/2024-11-09_00-47-43/checkpoints/epoch_1079.ckpt # fLCIPSeg
+ckpt_path: null <-- REPLACE WITH YOUR CHECKPOINT PATH
 
-#name: predict_reflection_majority_vote_585_neg_removed_5_mistakes
-name: null
+name: null # name of the experiment, used for output directory
 paths:
   output_dir: ${local.prediction_output_dir}/${name}
   log_dir: ${paths.output_dir}

@@ -156,6 +156,8 @@ class DebrisPredictionDataset(Dataset):
 
         self.num_classes = len(text_prompts)
         assert len(densities) == self.num_classes
+        assert dataset_dir is not None, "Dataset directory must be provided."
+        assert os.path.exists(dataset_dir), f"Dataset directory {dataset_dir} does not exist."
         self.original_image_dir = dataset_dir
         self.original_imgs = natsorted([p.join(self.original_image_dir, f)
                                         for f in os.listdir(self.original_image_dir)

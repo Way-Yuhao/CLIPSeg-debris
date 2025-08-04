@@ -5,7 +5,7 @@ _target_: src.models.clipseg.lightning_modules.CLIPSegLitModule
 mix: true
 mix_text_max: 0.5
 mix_text_min: 0.0
-pretrained_clipseg_ckpt: ${local.model_root_dir}/CLIPSeg/rd64-uni-refined.pth
+pretrained_clipseg_ckpt: null # ${local.model_root_dir}/CLIPSeg/rd64-uni-refined.pth
 train_with_engineered_visual_prompts: true
 
 loss_fn:

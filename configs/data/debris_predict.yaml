@@ -1,23 +1,15 @@
-# multi-class, merged
-
 _target_: src.data.debris_datamodule.DebrisPredictDataModule
 batch_size: 64
 num_workers: 12
 pin_memory: false
-#merge_via: "at_least_two" # union
 
-#hurricane_id_ranges: # for split by hurricane
-#    ian: [1, 12526] # 256 labeled, high-res, for train
-#    ida: [12527, 20132] # 125 labeled, high-res, for val & test
-#    ike: [20133, 22527] # 125 labeled, low-res, for train
-#remove_ike: false
-
+query_images_dir: null
 mask: "text_and_crop_blur_highlight352"
 
 # dataset parameters
 dataset:
   _target_: src.data.components.debris_one_hot.DebrisPredictionDataset
-  dataset_dir: ${local.data_dir}/HIDeAI/predict_highres/
+  dataset_dir: ${data.query_images_dir}
   resize_to: [256, 256]
   text_prompts: ['no debris', 'debris at low density', 'debris at high density']
   densities: ['no', 'low', 'high']

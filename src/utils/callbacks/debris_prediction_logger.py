@@ -22,13 +22,14 @@ class DebrisPredictionLogger(Callback):
             rgb_norm: mean and std for normalizing the RGB image
         """
         self.save_dir = os.path.join(save_dir, 'predictions')
-        self.onehot_save_dir = os.path.join(save_dir, 'onehot_rbg')
+        # self.onehot_save_dir = os.path.join(save_dir, 'onehot_rbg')
         self.rgb_dir = os.path.join(save_dir, 'original')
         self.gt_dir = os.path.join(save_dir, 'ground_truth')
         self.cmap = cmap
         self.rgb_norm = rgb_norm
 
         self.mean, self.std = None, None
+        self.predict_id = 0
 
 
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
@@ -38,7 +39,7 @@ class DebrisPredictionLogger(Callback):
         self.std = self.std[:, np.newaxis, np.newaxis]
 
         os.makedirs(self.save_dir, exist_ok=True)
-        os.makedirs(self.onehot_save_dir, exist_ok=True)
+        # os.makedirs(self.onehot_save_dir, exist_ok=True)
         os.makedirs(self.rgb_dir, exist_ok=True)
         os.makedirs(self.gt_dir, exist_ok=True)
 
@@ -47,17 +48,27 @@ class DebrisPredictionLogger(Callback):
                           batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         # self.save_png(batch, outputs)
         # self.save_one_hot_rgb(batch, outputs)
-        self.save_rgb_image(batch, outputs)
-        self.save_cmap_output(batch, outputs)
-        self.save_ground_truth(batch, outputs)
+        id_ = self.extract_img_id(trainer, batch)
+        self.save_rgb_image(batch, outputs, id_)
+        self.save_cmap_output(batch, outputs, id_)
+        self.save_ground_truth(batch, outputs, id_)
 
 
     def on_predict_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: Any,
                              batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         # self.save_png(batch, outputs)
         # self.save_one_hot_rgb(batch, outputs)
-        self.save_rgb_image(batch, outputs)
-        self.save_cmap_output(batch, outputs)
+        id_ = self.extract_img_id(trainer, batch)
+        self.save_rgb_image(batch, outputs, id_)
+        self.save_cmap_output(batch, outputs, id_)
+
+    def extract_img_id(self, trainer: "pl.Trainer", batch: Any) -> str:
+        if trainer.state.stage.value == 'test':
+            return batch[0][4][0]
+        elif trainer.state.stage.value == 'predict':
+            id_ = self.predict_id
+            self.predict_id += 1
+            return str(id_)
 
     def save_png(self, batch: Any, outputs: Any):
         fname = os.path.join(self.save_dir, batch[1][2][0])
@@ -70,16 +81,16 @@ class DebrisPredictionLogger(Callback):
         seg_low = pred_class == 1
         seg_high = pred_class == 2
         one_hot_segmentation = one_hot_encode_segmentation(seg_low, seg_high)
-        fname = os.path.join(self.onehot_save_dir, batch[0][4][0])
+        fname = os.path.join(self.save_dir, batch[0][4][0])
         cv2.imwrite(fname, one_hot_segmentation)
 
-    def save_rgb_image(self, batch: Any, outputs: Any):
+    def save_rgb_image(self, batch: Any, outputs: Any, id_: str):
         # extract rgb image
         original_image = self.extract_rgb_image(outputs)
-        fname = os.path.join(self.rgb_dir, f"{batch[0][4][0]}.png")
+        fname = os.path.join(self.rgb_dir, f"{id_}.png")
         original_image.save(fname, 'PNG')
 
-    def save_ground_truth(self, batch: Any, outputs: Any):
+    def save_ground_truth(self, batch: Any, outputs: Any, id_: str):
         # extract rgb image
         original_image = self.extract_rgb_image(outputs)
         gt_class = torch.argmax( outputs["data_y"][1], dim=1)
@@ -87,10 +98,10 @@ class DebrisPredictionLogger(Callback):
         # convert labels to a semi-transparent color overlay
         overlay_img = self.label_to_color_image(gt_class)
         final_visualization = Image.alpha_composite(original_image, overlay_img)
-        fname = os.path.join(self.gt_dir, f"{batch[0][4][0]}.png")
+        fname = os.path.join(self.gt_dir, f"{id_}.png")
         final_visualization.save(fname, 'PNG')
 
-    def save_cmap_output(self, batch: Any, outputs: Any):
+    def save_cmap_output(self, batch: Any, outputs: Any, id_: str):
         # extract rgb image
         original_image = self.extract_rgb_image(outputs)
         # extract predicted class
@@ -98,7 +109,7 @@ class DebrisPredictionLogger(Callback):
         # convert labels to a semi-transparent color overlay
         overlay_img = self.label_to_color_image(pred_class)
         final_visualization = Image.alpha_composite(original_image, overlay_img)
-        fname = os.path.join(self.onehot_save_dir, f"{batch[0][4][0]}.png")
+        fname = os.path.join(self.save_dir, f"{id_}.png")
         final_visualization.save(fname, 'PNG')
 
     def extract_rgb_image(self, outputs: Any):

@@ -1,13 +1,13 @@
 # @package _global_
 
 defaults:
-  - override /data: debris_one_hot # debris_one_hot, debris_predict
+  - override /data: debris_multi_annotator # debris_multi_annotator, debris_predict
   - override /callbacks: debris_prediction_logger # default,
   - override /logger: wandb # null, wandb
   - _self_
 
-data:
-  merge_via: majority_vote_734_negative
+#data:
+#  merge_via: majority_vote_734_negative
 #  merge_via: majority_vote_no_negative # positive subset
 #  merge_via: 734_negative_only # negative subset
 
