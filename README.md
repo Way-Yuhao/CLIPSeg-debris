@@ -38,7 +38,8 @@ pip install -r requirements.txt
 
 ## How to run
 
-Navigate to Design-Safe to download the annotated debris dataset proposed in this work.
+- Navigate to Design-Safe (pending DOI) to download the annotated debris dataset proposed in this work.
+- Download model weights from Hugging Face (pending url).
 
 ### Train & Fine-tune
 Fine-tune CLIPSeg model on the dataset using the provided training script.
