@@ -37,24 +37,33 @@ pip install -r requirements.txt
 
 ## How to run
 
-Train model with default configuration
+Navigate to Design-Safe to download the annotated debris dataset proposed in this work.
+
+### Train & Fine-tune
+Fine-tune CLIPSeg model on the dataset using the provided training script.
 
 ```bash
-# train on CPU
-python src/train.py trainer=cpu
-
-# train on GPU
-python src/train.py trainer=gpu
+# train on GPU, e.g., GPU 0
+python ./src/train.py experiment=clipseg_finetune trainer.devices=[0]
 ```
+Experiment configuration can be found from [configs/experiment/](configs/experiment/)
 
-Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
+### Test & Evaluate
+Test the fine-tuned model on the dataset using the provided testing script.
 
 ```bash
-python src/train.py experiment=experiment_name.yaml
+python ./src/eval.py experiment=retest trainer.devices=[0] name=DIR_NAME ckpt_path=CKPT_PATH
 ```
+Replace `DIR_NAME` with the name of the directory where the results will be saved, and `CKPT_PATH` with the path to the 
+checkpoint file of the fine-tuned model.
 
-You can override any parameter from command line like this
+### Prediction
+Predict the segmentation mask for a single image using the fine-tuned model.
 
 ```bash
-python src/train.py trainer.max_epochs=20 data.batch_size=64
+python ./src/eval.py trainer.devices=[0] data.query_images_dir=INPUT_DIR ckpt_path=CKPT_PATH name=DIR_NAME
 ```
+Replace `INPUT_DIR` with the directory containing the input images, `CKPT_PATH` with the path to the checkpoint file 
+of the fine-tuned model, and `DIR_NAME` with the name of the directory where the results will be saved.
+
+
