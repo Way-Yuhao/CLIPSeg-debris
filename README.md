@@ -69,3 +69,14 @@ Replace `INPUT_DIR` with the directory containing the input images, `CKPT_PATH` 
 of the fine-tuned model, and `DIR_NAME` with the name of the directory where the results will be saved.
 
 
+### Citation
+If you find this code useful in your research, please consider citing:
+```latex
+@article{amini2025debris,
+  title={Debris segmentation using post-hurricane aerial imagery},
+  author={Amini, Kooshan and Liu, Yuhao and Padgett, Jamie Ellen and Balakrishnan, Guha and Veeraraghavan, Ashok},
+  journal={Computer-Aided Civil and Infrastructure Engineering},
+  year={2025},
+  publisher={Wiley Online Library}
+}
+```
