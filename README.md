@@ -69,7 +69,7 @@ python ./src/eval.py trainer.devices=[0] data.query_images_dir=INPUT_DIR ckpt_pa
 Replace `INPUT_DIR` with the directory containing the input images, `CKPT_PATH` with the path to the checkpoint file 
 of the fine-tuned model, and `DIR_NAME` with the name of the directory where the results will be saved.
 
-
+---
 ### Citation
 If you find this code useful in your research, please consider citing:
 ```latex
