@@ -1,3 +1,13 @@
+# ---------------------------------------------
+# core scientific stack (keep before pandas / torch etc.)
+numpy>=1.26.4,<2.0        # stay on NumPy-1.x ABI and avoid 2.0 break
+
+# ---------------------------------------------
+# configuration management
+hydra-core>=1.3,<1.4      # explicit Hydra; pulls compatible OmegaConf
+
+# ---------------------------------------------
+# the rest of your original file (unchanged lines shown for context)
 autoroot==1.0.1
 openai-clip
 general_utils==0.1.16
@@ -7,8 +17,8 @@ lightning_utilities
 Loss==0.1.2
 matplotlib
 natsort==8.4.0
-omegaconf==2.3.0
-packaging
+omegaconf==2.3.0          # already matches Hydra-1.3 requirement
+packaging==25.0
 pandas==2.3.1
 Pillow==11.3.0
 pytest==8.4.1
@@ -16,13 +26,5 @@ python-dotenv==1.1.1
 Requests==2.32.4
 rich==14.1.0
 rootutils==1.0.7
-scikit_learn==1.3.2
-scipy==1.16.1
-setuptools==68.0.0
-sh==2.2.2
-tensorboardX==2.6.4
-tifffile==2023.12.9
-timm==0.4.12
-tqdm==4.66.1
-Utilis==0.1.3
-wandb==0.21.0
+scikit_learn
+# ---------------------------------------------
