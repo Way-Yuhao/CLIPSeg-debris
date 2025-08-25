@@ -5,11 +5,11 @@
 <a href="https://pytorch.org/get-started/locally/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white"></a>
 <a href="https://pytorchlightning.ai/"><img alt="Lightning" src="https://img.shields.io/badge/-Lightning-792ee5?logo=pytorchlightning&logoColor=white"></a>
 <a href="https://hydra.cc/"><img alt="Config: Hydra" src="https://img.shields.io/badge/Config-Hydra-89b8cd"></a>
-<a href="https://github.com/ashleve/lightning-hydra-template"><img alt="Template" src="https://img.shields.io/badge/-Lightning--Hydra--Template-017F2F?style=flat&logo=github&labelColor=gray"></a><br>
-[![Paper](http://img.shields.io/badge/Preprint-arxiv.2504.12542-B31B1B.svg)](https://arxiv.org/abs/2504.12542)
+<a href="https://github.com/ashleve/lightning-hydra-template"><img alt="Template" src="https://img.shields.io/badge/-Lightning--Hydra--Template-017F2F?style=flat&logo=github&labelColor=gray"></a>
+[![iCloud](https://img.shields.io/badge/Annotated_Debris_Dataset-3693F3?logo=icloud&logoColor=fff)]([#](https://www.designsafe-ci.org/data/browser/public/designsafe.storage.published/PRJ-6029))  
 [![Conference](http://img.shields.io/badge/Journal_Paper-Computer_Aided_Civil_and_Infrastructure_Engineering_(2025)-4b44ce.svg)](https://onlinelibrary.wiley.com/doi/10.1111/mice.70033)
-[![iCloud](https://img.shields.io/badge/Annotated_Debris_Dataset-3693F3?logo=icloud&logoColor=fff)]([#](https://www.designsafe-ci.org/data/browser/public/designsafe.storage.published/PRJ-6029))
 [![Cite&nbsp;-&nbsp;BibTeX](https://img.shields.io/badge/Cite-BibTeX-orange?style=flat)](#citation)
+[![Paper](http://img.shields.io/badge/Preprint-arxiv.2504.12542-B31B1B.svg)](https://arxiv.org/abs/2504.12542)
 </div>
 
 ## Description
