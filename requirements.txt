@@ -12,7 +12,7 @@ Loss==0.1.2
 matplotlib
 natsort==8.4.0
 omegaconf==2.3.0    
-packaging==25.0
+packaging
 pandas==2.3.1
 Pillow==11.3.0
 pytest==8.4.1
