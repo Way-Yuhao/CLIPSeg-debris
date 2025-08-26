@@ -21,3 +21,6 @@ Requests==2.32.4
 rich
 rootutils==1.0.7
 scikit_learn
+#------ for colab ------#
+ipywidgets
+gradio
