@@ -16,7 +16,8 @@
 
 ## Description
 
-This is the official implementation of the paper *Debris Segmentation using Post-Hurricane Aerial Imagery*.
+This is the official implementation of the paper *Debris Segmentation using Post-Hurricane Aerial Imagery*.  
+To quickly experiment with the proposed debris segmentation model (called *CLIPSeg-debris*), we recommend trying this [Colab demo](https://colab.research.google.com/drive/1oMWaTxJeKPPEC9kHV3hbSnCY2CSD9qTg?usp=sharing).
 
 ## Installation
 
