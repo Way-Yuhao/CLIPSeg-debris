@@ -8,7 +8,7 @@
 <a href="https://github.com/ashleve/lightning-hydra-template"><img alt="Template" src="https://img.shields.io/badge/-Lightning--Hydra--Template-017F2F?style=flat&logo=github&labelColor=gray"></a>  
 [![Google Colab](https://img.shields.io/badge/Colab%20Demo-F9AB00?logo=googlecolab&logoColor=fff)](https://colab.research.google.com/drive/1oMWaTxJeKPPEC9kHV3hbSnCY2CSD9qTg?usp=sharing)
 [![Demo Notebook](https://img.shields.io/badge/Jupyter-Demo%20-F37626?logo=jupyter&logoColor=white&style=flat)](<./notebooks/DEMO%201%20-%20Debris%20Prediction.ipynb>)
-[![iCloud](https://img.shields.io/badge/Annotated_Debris_Dataset-3693F3?logo=icloud&logoColor=fff)]([#](https://www.designsafe-ci.org/data/browser/public/designsafe.storage.published/PRJ-6029))  
+[![iCloud](https://img.shields.io/badge/Annotated_Debris_Dataset-3693F3?logo=icloud&logoColor=fff)](https://www.designsafe-ci.org/data/browser/public/designsafe.storage.published/PRJ-6029)
 [![Conference](http://img.shields.io/badge/Journal_Paper-Computer_Aided_Civil_and_Infrastructure_Engineering_(2025)-4b44ce.svg)](https://onlinelibrary.wiley.com/doi/10.1111/mice.70033)
 [![Cite&nbsp;-&nbsp;BibTeX](https://img.shields.io/badge/Cite-BibTeX-orange?style=flat)](#citation)
 [![Paper](http://img.shields.io/badge/Preprint-arxiv.2504.12542-B31B1B.svg)](https://arxiv.org/abs/2504.12542)
