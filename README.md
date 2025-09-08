@@ -32,7 +32,7 @@ conda create -n clipseg python=3.10
 conda activate clipseg
 ```
 
-Install pytorch according to instructions: https://pytorch.org/get-started/.  
+Install PyTorch according to instructions: https://pytorch.org/get-started/.  
 Install the remaining dependencies using pip:
 ```bash
 # install requirements
@@ -41,11 +41,11 @@ pip install -r requirements.txt
 
 ## How to run
 
-- Navigate to Design-Safe (pending DOI) to download the annotated debris dataset proposed in this work.
-- Download model weights from Hugging Face (pending url).
+- Navigate to Design-Safe to download the [annotated debris dataset](https://doi.org/10.17603/ds2-jvps-2n95) proposed in this work.
+- Download [model weights](https://huggingface.co/YuhaoL/CLIPSeg-debris) from Hugging Face.
 
 ### Train & Fine-tune
-Fine-tune CLIPSeg model on the dataset using the provided training script.
+Fine-tune the CLIPSeg model on the dataset using the provided training script.
 
 ```bash
 # training on GPU 0, for example: 
