@@ -16,8 +16,45 @@
 
 ## Description
 
-This is the official implementation of the paper *Debris Segmentation using Post-Hurricane Aerial Imagery*.  
+This is the official implementation of the paper *Debris Segmentation using Post-Hurricane Aerial Imagery*.
 To quickly experiment with the proposed debris segmentation model (called *CLIPSeg-debris*), we recommend trying this [Colab demo](https://colab.research.google.com/drive/1oMWaTxJeKPPEC9kHV3hbSnCY2CSD9qTg?usp=sharing).
+
+<div align="center">
+  <img src="assets/regional_result.png" alt="Regional Results" width="400"/>
+</div>
+
+## Dataset
+
+Our debris segmentation dataset comprises **1,200+ manually annotated aerial RGB images** from three major hurricane events:
+
+- **Hurricane Ian (2022)**: 685 images from Estero Island and Fort Myers, FL
+- **Hurricane Ida (2021)**: 273 images from Grand Isle, Port Fourchon, and Golden Meadow, LA
+- **Hurricane Ike (2008)**: 284 images from Galveston Island, TX
+
+**Key Features:**
+- Multiple annotators with consensus labeling to reduce human bias
+- Balanced dataset with debris-positive and debris-free samples
+- Diverse environmental conditions and sensor resolutions (5-50cm)
+- Three debris classes: no debris, low-density debris, high-density debris
+
+## Performance
+
+CLIPSeg-debris achieves state-of-the-art performance when evaluated on Hurricane Ida imagery (entirely excluded from training):
+
+### Detailed Results
+
+| Method | Dice ↑ | IoU ↑ | **Recall ↑** | | | **Precision ↑** | | |
+|--------|--------|-------|-------------|---|---|--------------|---|---|
+| | All | All | Debris-free | Low-density | High-density | Debris-free | Low-density | High-density |
+| UNet | 0.79 | 0.76 | 0.98 | **0.84** | 0.90 | **0.99** | 0.51 | **0.94** |
+| DeepLabV3 | 0.82 | 0.79 | **0.99** | 0.67 | 0.92 | **0.99** | 0.79 | 0.86 |
+| CLIPSeg | 0.54 | 0.52 | 0.83 | 0.54 | **0.96** | **0.99** | 0.79 | 0.33 |
+| **CLIPSeg-debris** | **0.86** | **0.83** | **0.99** | 0.69 | 0.92 | **0.99** | **0.80** | **0.94** |
+
+**Key Achievements:**
+- **Best overall performance**: 0.86 Dice score and 0.83 IoU
+- **Superior precision**: Lowest false positive rates across all debris classes
+- **Robust generalization**: Tested on entirely unseen hurricane event and geographic region
 
 ## Installation
 
