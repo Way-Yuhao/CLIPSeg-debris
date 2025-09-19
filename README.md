@@ -20,7 +20,7 @@ This is the official implementation of the paper *Debris Segmentation using Post
 To quickly experiment with the proposed debris segmentation model (called *CLIPSeg-debris*), we recommend trying this [Colab demo](https://colab.research.google.com/drive/1oMWaTxJeKPPEC9kHV3hbSnCY2CSD9qTg?usp=sharing).
 
 <div align="center">
-  <img src="assets/regional_result.png" alt="Regional Results" width="400"/>
+  <img src="assets/regional_result.png" alt="Regional Results" width="500"/>
 </div>
 
 ## Dataset
