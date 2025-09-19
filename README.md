@@ -43,13 +43,12 @@ CLIPSeg-debris achieves state-of-the-art performance when evaluated on Hurricane
 
 ### Detailed Results
 
-| Method | Dice ↑ | IoU ↑ | **Recall ↑** | | | **Precision ↑** | | |
-|--------|--------|-------|-------------|---|---|--------------|---|---|
-| | All | All | Debris-free | Low-density | High-density | Debris-free | Low-density | High-density |
+| Method | Dice↑ | IoU↑ | Recall↑ (Debris-free) | Recall↑ (Low-density) | Recall↑ (High-density) | Precision↑ (Debris-free) | Precision↑ (Low-density) | Precision↑ (High-density) |
+|--------|-------|------|----------------------|----------------------|------------------------|--------------------------|--------------------------|---------------------------|
 | UNet | 0.79 | 0.76 | 0.98 | **0.84** | 0.90 | **0.99** | 0.51 | **0.94** |
-| DeepLabV3 | 0.82 | 0.79 | **0.99** | 0.67 | 0.92 | **0.99** | 0.79 | 0.86 |
-| CLIPSeg | 0.54 | 0.52 | 0.83 | 0.54 | **0.96** | **0.99** | 0.79 | 0.33 |
-| **CLIPSeg-debris** | **0.86** | **0.83** | **0.99** | 0.69 | 0.92 | **0.99** | **0.80** | **0.94** |
+| DeepLabV3 | <u>0.82</u> | <u>0.79</u> | **0.99** | 0.67 | <u>0.92</u> | **0.99** | <u>0.79</u> | 0.86 |
+| CLIPSeg | 0.54 | 0.52 | 0.83 | 0.54 | **0.96** | **0.99** | <u>0.79</u> | 0.33 |
+| **CLIPSeg-debris** | **0.86** | **0.83** | **0.99** | <u>0.69</u> | <u>0.92</u> | **0.99** | **0.80** | **0.94** |
 
 **Key Achievements:**
 - **Best overall performance**: 0.86 Dice score and 0.83 IoU
