@@ -1,0 +1,83 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "type": "SoftwareSourceCode",
+    "applicationCategory": "Post-Hurricane Debris Segmentation",
+    "codeRepository": "https://github.com/Way-Yuhao/CLIPSeg-debris.git",
+    "contributor": [
+        {
+            "id": "_:contributor_1",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Rice University, Houston, TX, U.S.A."
+            },
+            "email": "Kooshan.Amini@rice.edu",
+            "familyName": "Amini",
+            "givenName": "Kooshan"
+        },
+        {
+            "id": "_:contributor_2",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Rice University, Houston, TX, U.S.A."
+            },
+            "email": "yl241@rice.edu",
+            "familyName": "Liu",
+            "givenName": "Yuhao"
+        },
+        {
+            "id": "_:contributor_3",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Rice University, Houston, TX, U.S.A."
+            },
+            "email": "Jamie.Padgett@rice.edu",
+            "familyName": "Padgett",
+            "givenName": "Jamie"
+        },
+        {
+            "id": "_:contributor_4",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Rice University, Houston, TX, U.S.A."
+            },
+            "email": "guha@rice.edu",
+            "familyName": "Balakrishnan",
+            "givenName": "Guha"
+        },
+        {
+            "id": "_:contributor_5",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Rice University, Houston, TX, U.S.A."
+            },
+            "email": "vashok@rice.edu",
+            "familyName": "Veeraraghavan",
+            "givenName": "Ashok"
+        }
+    ],
+    "dateCreated": "2025-08-13",
+    "datePublished": "2025-08-13",
+    "description": "This is the implementation of the paper \"Debris Segmentation using Post-Hurricane Aerial Imagery\".",
+    "funder": {
+        "type": "Organization",
+        "name": "National Science Foundation, Ken Kennedy Institute"
+    },
+    "keywords": [
+        "Hurricane",
+        "Debris",
+        "Segmentation"
+    ],
+    "license": "https://spdx.org/licenses/BSD-3-Clause",
+    "name": "Debris Segmentation Model using Post-Hurricane Aerial Imagery (CLIPSeg-debris)",
+    "programmingLanguage": [
+        "Python",
+        "Jupyter Notebook"
+    ],
+    "funding": "NSF Award 2227467, NSF Award 2107313, Ken Kennedy Institute's inaugural Research Clusters Initiative",
+    "referencePublication": "https://doi.org/10.1111/mice.70033"
+}
